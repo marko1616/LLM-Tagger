@@ -58,12 +58,12 @@ export default {
     padding: 10px;
     font-size: 16px;
     padding-bottom: 40px;
-    font-weight: 600;
+    font-weight: 300;
+    text-wrap-mode: nowrap;
     line-height: 1.2;
     border: 1px solid $content-border-color;
     border-radius: 5px;
     background-color: $content-bg-color;
-    white-space: pre-wrap;
     word-wrap: break-word;
     min-height: 4vh;
     outline: none;

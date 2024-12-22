@@ -180,11 +180,13 @@ export default defineComponent({
 
   .title {
     display: flex;
-    color: white;
+    color: $content-color;
     font-family: sans-serif;
     font-size: 18px;
     padding: 4px;
     text-align: center;
+
+    transition: color 0.3s ease, color 0.3s ease;
   }
 
   .outputs,
@@ -227,6 +229,14 @@ export default defineComponent({
 
     transition: background-color 0.3s ease, color 0.3s ease;
     transition: border-color 0.3s ease, color 0.3s ease;
+  }
+
+  &.selected {
+    & .title {
+      color: $content-select-color;
+
+      transition: color 0.3s ease, color 0.3s ease;
+    }
   }
 }
 </style>

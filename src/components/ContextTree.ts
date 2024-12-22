@@ -1,6 +1,4 @@
-import {ref} from 'vue'
-
-import {NodeEditor, GetSchemes, ClassicPreset} from 'rete'
+import {NodeEditor, GetSchemes, ClassicPreset, BaseSchemes} from 'rete'
 import {AreaPlugin, AreaExtensions} from 'rete-area-plugin'
 import {ConnectionPlugin, Presets as ConnectionPresets} from 'rete-connection-plugin'
 import {VuePlugin, Presets, VueArea2D} from 'rete-vue-plugin'
@@ -9,7 +7,10 @@ import TextNode from './ContextNode.vue'
 import Connection from './NodeConnection.vue'
 import Socket from './NodeSocket.vue'
 
+import { PromptTextArea } from './TextArea'
 import TextAreaControl from './TextArea.vue'
+
+import "@/styles/editorbg.scss"
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -17,38 +18,33 @@ type Schemes = GetSchemes<
 >
 type AreaExtra = VueArea2D<Schemes>
 
-class CustomTextArea extends ClassicPreset.Control {
-  value = ''
-  collapsed = ref(false)
-  constructor() {
-    super()
-  }
-
-  onInput(event: InputEvent) {
-    const target = event.target as HTMLElement
-    this.value = target.innerHTML
-  }
-
-  onCollapse() {
-    this.collapsed.value = !this.collapsed.value
-  }
-}
-
 async function createUserAssistantPairs(editor: NodeEditor<Schemes>, socket: ClassicPreset.Socket, start: number) {
   const userNode = new ClassicPreset.Node(`Input-User#${start}`)
-  userNode.addControl('TextArea', new CustomTextArea())
+  userNode.addControl('TextArea', new PromptTextArea())
   userNode.addOutput('context-out', new ClassicPreset.Output(socket))
   userNode.addInput('context-in', new ClassicPreset.Input(socket))
   await editor.addNode(userNode)
 
   const assistantNode = new ClassicPreset.Node(`Input-Assistant#${start}`)
-  assistantNode.addControl('TextArea', new CustomTextArea())
+  assistantNode.addControl('TextArea', new PromptTextArea())
   assistantNode.addOutput('context-out', new ClassicPreset.Output(socket))
   assistantNode.addInput('context-in', new ClassicPreset.Input(socket))
   await editor.addNode(assistantNode)
 
   await editor.addConnection(new ClassicPreset.Connection(userNode, 'context-out', assistantNode, 'context-in'))
 }
+
+function addCustomBackground<S extends BaseSchemes, K>(
+  area: AreaPlugin<S, K>
+) {
+  const background = document.createElement("div");
+
+  background.classList.add("background");
+  background.classList.add("fill-area");
+
+  area.area.content.add(background);
+}
+
 
 export async function createEditor(container: HTMLElement) {
   const socket = new ClassicPreset.Socket('socket')
@@ -72,7 +68,7 @@ export async function createEditor(container: HTMLElement) {
             return Presets.classic.Node
           },
           control(data) {
-            if (data.payload instanceof CustomTextArea) {
+            if (data.payload instanceof PromptTextArea) {
               return TextAreaControl
             }
           },
@@ -86,6 +82,8 @@ export async function createEditor(container: HTMLElement) {
       }),
   )
   connection.addPreset(ConnectionPresets.classic.setup())
+
+  addCustomBackground(area)
 
   editor.use(area)
   area.use(connection)

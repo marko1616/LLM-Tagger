@@ -4,13 +4,17 @@
       <TextTree class="editor" />
     </div>
     <div class="sidebar">
-      <div class="sidebar-content">
-        <h2>工具</h2>
-        <ul>
-          <li>添加对话</li>
-          <li>提交</li>
-        </ul>
+      <div class="sidebar-main-funct">
       </div>
+      <div class="sidebar-buttom-funct">
+        <button>提交</button>
+      </div>
+      <footer>
+        <p>
+          &copy; 2024 <a href="https://github.com/marko1616/LLM-Tagger" target="_blank">LLM-Tagger</a>.
+          Licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0 License</a>.
+        </p>
+      </footer>
     </div>
   </div>
 </template>
@@ -29,9 +33,46 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@import "@/styles/color.scss";
+
+footer {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 1vh;
+  color: $content-color;
+}
+
+a {
+  color: $content-color;
+  text-decoration: none;
+}
+
+a:visited {
+  color: $content-select-color;
+}
+
+a:active {
+  color: $content-select-color;
+}
+
+html, body {
+  display: flex;
+
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+body {
+  background-color: $main-bg-color;
+}
+
 #app {
   display: flex;
-  font-family: "Source Han Sans", "Noto Sans CJK SC", sans-serif;
+  font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
   height: 100vh;
   width: 100vw;
 }
@@ -42,20 +83,31 @@ export default defineComponent({
 
 .editor-container {
   flex: 3;
+
   display: flex;
+  margin-right: -1vw;
 }
 
 .sidebar {
   flex: 1;
-  background-color: #f0f0f0;
-  border-left: 1px solid #ccc;
+  z-index: 1;
+  background-color: $container-bg-color;
+  border-left: 1px solid $container-border-color;
+  border-radius: 1vw;
   display: flex;
   flex-direction: column;
   padding: 16px;
+  padding-left: 1vw;
+  padding-right: 1vw;
 }
 
-.sidebar-content {
+.sidebar-main-funct {
+  display: flex;
   flex: 1;
-  overflow-y: auto;
+}
+
+.sidebar-buttom-funct {
+  display: flex;
+  justify-content: center;
 }
 </style>

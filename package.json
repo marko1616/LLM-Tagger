@@ -8,9 +8,6 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@milkdown/kit": "^7.5.9",
-    "@milkdown/theme-nord": "^7.5.9",
-    "@milkdown/vue": "^7.5.9",
     "core-js": "^3.8.3",
     "eslint-config-google": "^0.14.0",
     "rete": "^2.0.5",
