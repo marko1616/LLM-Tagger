@@ -1,27 +1,61 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <div id="app">
+    <div class="editor-container">
+      <TextTree class="editor" />
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-content">
+        <h2>工具</h2>
+        <ul>
+          <li>添加对话</li>
+          <li>提交</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent } from 'vue'
 
-@Options({
+import TextTree from '@/components/ContextTree.vue'
+
+export default defineComponent({
+  name: 'app',
   components: {
-    HelloWorld,
-  },
+    TextTree
+  }
 })
-export default class App extends Vue {}
 </script>
 
-<style>
+<style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  display: flex;
+  font-family: "Source Han Sans", "Noto Sans CJK SC", sans-serif;
+  height: 100vh;
+  width: 100vw;
+}
+
+.editor {
+  display: flex;
+}
+
+.editor-container {
+  flex: 3;
+  display: flex;
+}
+
+.sidebar {
+  flex: 1;
+  background-color: #f0f0f0;
+  border-left: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
 }
 </style>
