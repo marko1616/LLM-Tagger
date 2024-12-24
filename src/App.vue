@@ -1,13 +1,15 @@
 <template>
   <div id="app">
-    <div class="editor-container">
-      <TextTree class="editor" />
+    <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible"/>
+    <div class="context-tree-container">
+      <ContextTree class="context-tree" />
     </div>
     <div class="sidebar">
       <div class="sidebar-main-funct">
       </div>
       <div class="sidebar-buttom-funct">
         <button>提交</button>
+        <button @click="toggleEditor">编辑</button>
       </div>
       <footer>
         <p>
@@ -20,19 +22,47 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-
-import TextTree from '@/components/ContextTree.vue'
+import {ref} from 'vue'
+import {defineComponent} from 'vue'
+import ContextTree from '@/components/ContextTree.vue'
+import TextEditor from '@/components/TextEditor.vue'
 
 export default defineComponent({
-  name: 'app',
   components: {
-    TextTree
+    ContextTree,
+    TextEditor
+  },
+  setup() {
+    const isEditorVisible = ref(false)
+    const toggleEditor = () => {
+      isEditorVisible.value = !isEditorVisible.value
+    }
+    const closeEditor = () => {
+      isEditorVisible.value = false
+    }
+
+    return {
+      isEditorVisible,
+      toggleEditor,
+      closeEditor
+    }
   }
 })
 </script>
 
 <style lang="scss">
+html, body {
+  display: flex;
+
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+</style>
+
+<style lang="scss" scoped>
 @import "@/styles/color.scss";
 
 footer {
@@ -56,16 +86,6 @@ a:active {
   color: $content-select-color;
 }
 
-html, body {
-  display: flex;
-
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
 body {
   background-color: $main-bg-color;
 }
@@ -77,11 +97,11 @@ body {
   width: 100vw;
 }
 
-.editor {
+.context-tree {
   display: flex;
 }
 
-.editor-container {
+.context-tree-container {
   flex: 3;
 
   display: flex;

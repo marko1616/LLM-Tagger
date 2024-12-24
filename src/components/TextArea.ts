@@ -1,5 +1,5 @@
 import {ref} from 'vue'
-import { ClassicPreset } from 'rete'
+import {ClassicPreset} from 'rete'
 
 class PromptTextArea extends ClassicPreset.Control {
   value = ''
@@ -11,8 +11,8 @@ class PromptTextArea extends ClassicPreset.Control {
   onInput(event: InputEvent) {
     const target = event.target as HTMLElement
     target.querySelectorAll('*').forEach((el) => {
-      (el as HTMLElement).removeAttribute('style');
-    });
+      (el as HTMLElement).removeAttribute('style')
+    })
     this.value = target.innerHTML
   }
 
@@ -21,4 +21,4 @@ class PromptTextArea extends ClassicPreset.Control {
   }
 }
 
-export { PromptTextArea }
+export {PromptTextArea}

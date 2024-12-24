@@ -7,7 +7,6 @@ import {defineComponent} from 'vue'
 import {createEditor} from './ContextTree'
 
 export default defineComponent({
-  name: 'TextTree',
   mounted() {
     createEditor(this.$refs.rete as HTMLElement)
   }

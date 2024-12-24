@@ -7,10 +7,10 @@ import TextNode from './ContextNode.vue'
 import Connection from './NodeConnection.vue'
 import Socket from './NodeSocket.vue'
 
-import { PromptTextArea } from './TextArea'
+import {PromptTextArea} from './TextArea'
 import TextAreaControl from './TextArea.vue'
 
-import "@/styles/editorbg.scss"
+import '@/styles/editorbg.scss'
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -35,14 +35,14 @@ async function createUserAssistantPairs(editor: NodeEditor<Schemes>, socket: Cla
 }
 
 function addCustomBackground<S extends BaseSchemes, K>(
-  area: AreaPlugin<S, K>
+    area: AreaPlugin<S, K>
 ) {
-  const background = document.createElement("div");
+  const background = document.createElement('div')
 
-  background.classList.add("background");
-  background.classList.add("fill-area");
+  background.classList.add('background')
+  background.classList.add('fill-area')
 
-  area.area.content.add(background);
+  area.area.content.add(background)
 }
 
 
@@ -55,7 +55,7 @@ export async function createEditor(container: HTMLElement) {
   const render = new VuePlugin<Schemes, AreaExtra>()
 
   AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
-    accumulating: AreaExtensions.accumulateOnCtrl(),
+    accumulating: AreaExtensions.accumulateOnCtrl()
   })
 
   render.addPreset(
@@ -77,9 +77,9 @@ export async function createEditor(container: HTMLElement) {
           },
           connection(context) {
             return Connection
-          },
-        },
-      }),
+          }
+        }
+      })
   )
   connection.addPreset(ConnectionPresets.classic.setup())
 
