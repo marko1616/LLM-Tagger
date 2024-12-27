@@ -2,7 +2,7 @@
   <div id="app">
     <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible"/>
     <div class="context-tree-container">
-      <ContextTree class="context-tree" />
+      <ContextTree class="context-tree" ref="contextTreeRef"/>
     </div>
     <div class="sidebar">
       <div class="sidebar-main-funct">
@@ -10,6 +10,8 @@
       <div class="sidebar-buttom-funct">
         <button>提交</button>
         <button @click="toggleEditor">编辑</button>
+        <button @click="getContent">测试</button>
+        <button @click="createUserAssistantPairs">添加节点</button>
       </div>
       <footer>
         <p>
@@ -24,7 +26,7 @@
 <script lang="ts">
 import {ref} from 'vue'
 import {defineComponent} from 'vue'
-import ContextTree from '@/components/ContextTree.vue'
+import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue';
 import TextEditor from '@/components/TextEditor.vue'
 
 export default defineComponent({
@@ -32,19 +34,31 @@ export default defineComponent({
     ContextTree,
     TextEditor
   },
+  methods: {
+    toggleEditor() {
+      this.isEditorVisible = !this.isEditorVisible
+    },
+    closeEditor() {
+      this.isEditorVisible = false
+    }
+  },
   setup() {
     const isEditorVisible = ref(false)
-    const toggleEditor = () => {
-      isEditorVisible.value = !isEditorVisible.value
-    }
-    const closeEditor = () => {
-      isEditorVisible.value = false
-    }
+    const contextTreeRef = ref<ContextTreeInstance | null>(null);
+
+    const getContent = () => {
+      contextTreeRef.value?.getData()
+    };
+
+    const createUserAssistantPairs = () => {
+      contextTreeRef.value?.createUserAssistantPairs()
+    };
 
     return {
-      isEditorVisible,
-      toggleEditor,
-      closeEditor
+      getContent,
+      createUserAssistantPairs,
+      contextTreeRef,
+      isEditorVisible
     }
   }
 })
@@ -113,7 +127,8 @@ body {
   z-index: 1;
   background-color: $container-bg-color;
   border-left: 1px solid $container-border-color;
-  border-radius: 1vw;
+  border-top-left-radius: 1vw;
+  border-bottom-left-radius: 1vw;
   display: flex;
   flex-direction: column;
   padding: 16px;

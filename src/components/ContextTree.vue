@@ -3,14 +3,34 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-import {createEditor} from './ContextTree'
+import { defineComponent, ComponentPublicInstance } from 'vue'
+import { reteEditor } from './ContextTree'
 
 export default defineComponent({
+  data() {
+    return {
+      editor: null as reteEditor | null,
+    };
+  },
   mounted() {
-    createEditor(this.$refs.rete as HTMLElement)
+    this.editor = new reteEditor(this.$refs.rete as HTMLElement)
+  },
+  methods: {
+    getData(): void {
+      console.log(this.editor?.getNodes())
+      console.log(this.editor?.getConnections())
+    },
+
+    createUserAssistantPairs(): void {
+      this.editor?.createUserAssistantPairs()
+    },
   }
 })
+
+export type ContextTreeInstance = ComponentPublicInstance<{
+  getData: () => void;
+  createUserAssistantPairs: () => void;
+}>;
 </script>
 
 <style lang="scss" scoped>

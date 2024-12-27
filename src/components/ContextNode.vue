@@ -175,68 +175,122 @@ export default defineComponent({
   flex-direction: column;
   gap: 10px;
 
-  transition: background-color 0.3s ease, color 0.3s ease;
-  transition: border-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
 
-  .title {
+  & .title {
     display: flex;
     color: $content-color;
     font-family: sans-serif;
     font-size: 18px;
     padding: 4px;
     text-align: center;
-
-    transition: color 0.3s ease, color 0.3s ease;
   }
 
-  .outputs,
-  .inputs,
-  .controls {
+  & .outputs,
+  & .inputs,
+  & .controls {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
 
-  .output,
-  .input {
+  & .output,
+  & .input {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
-  .output-title,
-  .input-title {
+  & .output-title,
+  & .input-title {
     display: flex;
     color: white;
     font-family: sans-serif;
     font-size: 14px;
   }
 
-  .output-socket,
-  .input-socket {
+  & .output-socket,
+  & .input-socket {
     display: flex;
     display: inline-flex;
   }
 
-  .control {
+  & .control {
     display: flex;
     align-self: stretch;
   }
 
   &:hover {
-    background-color: $container-bg-select-color;
-    border-color: $container-border-select-color;
-
-    transition: background-color 0.3s ease, color 0.3s ease;
-    transition: border-color 0.3s ease, color 0.3s ease;
+    background-color: $container-bg-hover-color;
+    border-color: $container-border-hover-color;
   }
 
   &.selected {
-    & .title {
-      color: $content-select-color;
+    background-color: $container-bg-select-color;
+    border-color: $container-border-select-color;
+  }
+}
+</style>
 
-      transition: color 0.3s ease, color 0.3s ease;
+<style lang="scss">
+@import "@/styles/color.scss";
+
+[rete-context-menu] {
+  width: 40vw;
+  min-width: 100px;
+  max-width: 800px;
+  background: $container-bg-color;
+  border: 2px solid $container-border-color;
+  border-radius: 10px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    border-color: $container-border-hover-color;
+  }
+
+  .block {
+    background: $container-bg-color;
+    border-radius: 0.5vw;
+    border: 0px;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s ease;
+
+    &.item {
+      cursor: pointer;
+      border: 0.1vw solid transparent;
     }
+
+    &:hover {
+      background: $container-bg-hover-color !important;
+      border-color: $container-border-hover-color !important;
+      color: $content-color !important;
+    }
+
+    &:focus-visible {
+      outline: 0px;
+    }
+  }
+
+  .block:first-child input {
+    width: 100%;
+    background: $container-input-bg-color;
+    color: $content-color;
+    border: 2px solid $container-border-color;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.3s ease;
+
+    &:focus {
+      background: $container-bg-hover-color;
+      border-color: $container-border-hover-color;
+    }
+  }
+
+  .search {
+    color: $content-color;
+    font-size: 1.4vh;
   }
 }
 </style>
