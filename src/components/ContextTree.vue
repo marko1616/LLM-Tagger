@@ -16,11 +16,6 @@ export default defineComponent({
     this.editor = new reteEditor(this.$refs.rete as HTMLElement)
   },
   methods: {
-    getData(): void {
-      console.log(this.editor?.getNodes())
-      console.log(this.editor?.getConnections())
-    },
-
     createUserAssistantPairs(): void {
       this.editor?.createUserAssistantPairs()
     },
@@ -28,7 +23,6 @@ export default defineComponent({
 })
 
 export type ContextTreeInstance = ComponentPublicInstance<{
-  getData: () => void;
   createUserAssistantPairs: () => void;
 }>;
 </script>

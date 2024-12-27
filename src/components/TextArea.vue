@@ -1,20 +1,16 @@
 <template>
   <div class="data-input-container" :class="{ 'is-collapsed': data.collapsed.value }">
-    <div
+    <textarea
       class="data-input"
-      contenteditable="true"
-      aria-multiline="true"
-      spellcheck="false"
-      role="textbox"
-      v-html="data.value"
+      ref="dataInput"
+      v-model="data.value.value"
       @pointerdown.stop=""
       @input="data.onInput"
-    >
-    </div>
+    ></textarea>
     <div class="toggle-button"
         @pointerdown.stop=""
         @dblclick.stop=""
-        @click="data.onCollapse">
+        @click="data.onCollapse($refs.dataInput)">
         {{ data.collapsed.value ? '展开' : '折叠' }}
   </div>
   </div>
@@ -31,6 +27,7 @@ export default {
 
 .data-input-container {
   display: flex;
+  flex-grow: 0;
   flex-direction: column;
 
   .toggle-button {
@@ -50,6 +47,7 @@ export default {
   .data-input {
     display: flex;
     overflow-y: none;
+    overflow: hidden;
     caret-color: $content-color;
 
     color: $content-color;
@@ -57,7 +55,6 @@ export default {
     max-width: 100%;
     padding: 10px;
     font-size: 16px;
-    padding-bottom: 40px;
     font-weight: 300;
     text-wrap-mode: nowrap;
     line-height: 1.2;
@@ -84,7 +81,6 @@ export default {
   &.is-collapsed {
     .data-input {
       height: 50px;
-      overflow: hidden;
     }
 
     .toggle-button {

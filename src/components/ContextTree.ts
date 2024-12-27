@@ -5,7 +5,6 @@ import {VuePlugin, Presets, VueArea2D} from 'rete-vue-plugin'
 import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets } from "rete-context-menu-plugin";
 
 import TextNode from './ContextNode.vue'
-import ContextMenu from './ContextMenu.vue';
 import Connection from './NodeConnection.vue'
 import Socket from './NodeSocket.vue'
 
@@ -105,17 +104,23 @@ export class reteEditor {
     return this.editor.getNodes()
   }
 
+  getNode(id: string) {
+    return this.editor.getNode(id)
+  }
+
   getConnections() {
     return this.editor.getConnections()
   }
 
+  getConnection(id: string) {
+    return this.editor.getConnection(id)
+  }
+
   createUserAssistantPairs() {
     const userNode = this.userNodeFactory()
-    this.editor.addNode(userNode)
-  
     const assistantNode = this.assistantNodeFactory()
+    this.editor.addNode(userNode)
     this.editor.addNode(assistantNode)
-  
     this.editor.addConnection(new ClassicPreset.Connection(userNode, 'context-out', assistantNode, 'context-in'))
   }
 

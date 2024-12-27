@@ -1,6 +1,6 @@
 <template>
   <transition name="zoom-fade">
-    <div v-if="isEditorVisible" class="modal-overlay" @click.self="closeEditor">
+    <div v-show="isEditorVisible" class="modal-overlay" @click.self="closeEditor">
       <div class="modal-content">
         <MdEditor v-model="text"/>
       </div>
@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent} from 'vue'
+import { ref, watch, defineComponent} from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
@@ -18,9 +18,13 @@ export default defineComponent({
     isEditorVisible: {
       type: Boolean,
       required: true
+    },
+    editingText: {
+      type: String,
+      required: true
     }
   },
-  emits: ['close'],
+  emits: ['close', 'updateText'],
   methods: {
     closeEditor() {
       this.$emit('close')
@@ -29,9 +33,18 @@ export default defineComponent({
   components: {
     MdEditor
   },
-  setup() {
+  setup(props, { emit }) {
+    const text = ref("")
+    watch(() => props.editingText, (newValue: string, oldValue: string) => {
+      console.log(`outter changed from ${oldValue} to ${newValue}`);
+      text.value = newValue
+    });
+    watch(text, (newValue: string, oldValue: string) => {
+      console.log(`inner changed from ${oldValue} to ${newValue}`);
+      emit('updateText', text.value)
+    });
     return {
-      text: ref("Test")
+      text: text
     }
   }
 })

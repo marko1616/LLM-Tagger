@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible"/>
+    <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible" :editingText="editingTextRef" @updateText="updateText"/>
     <div class="context-tree-container">
       <ContextTree class="context-tree" ref="contextTreeRef"/>
     </div>
@@ -10,7 +10,6 @@
       <div class="sidebar-buttom-funct">
         <button>提交</button>
         <button @click="toggleEditor">编辑</button>
-        <button @click="getContent">测试</button>
         <button @click="createUserAssistantPairs">添加节点</button>
       </div>
       <footer>
@@ -24,10 +23,11 @@
 </template>
 
 <script lang="ts">
-import {ref} from 'vue'
+import {ref, toRef} from 'vue'
 import {defineComponent} from 'vue'
 import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue';
 import TextEditor from '@/components/TextEditor.vue'
+import { openOuterEditor, editingNode } from '@/components/ContextTreeStore'
 
 export default defineComponent({
   components: {
@@ -42,23 +42,30 @@ export default defineComponent({
       this.isEditorVisible = false
     }
   },
-  setup() {
+  mounted() {
+    openOuterEditor.value = () => {
+      this.toggleEditor()
+    }
+  },
+  setup(props, { expose }) {
     const isEditorVisible = ref(false)
     const contextTreeRef = ref<ContextTreeInstance | null>(null);
-
-    const getContent = () => {
-      contextTreeRef.value?.getData()
-    };
+    const editingTextRef = toRef(editingNode, 'data')
 
     const createUserAssistantPairs = () => {
       contextTreeRef.value?.createUserAssistantPairs()
-    };
+    }
+
+    const updateText = (text: string) => {
+      editingNode.data = text
+    }
 
     return {
-      getContent,
       createUserAssistantPairs,
       contextTreeRef,
-      isEditorVisible
+      isEditorVisible,
+      editingTextRef,
+      updateText
     }
   }
 })
