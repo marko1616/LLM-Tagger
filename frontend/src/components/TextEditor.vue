@@ -2,7 +2,7 @@
   <transition name="zoom-fade">
     <div v-show="isEditorVisible" class="modal-overlay" @click.self="closeEditor">
       <div class="modal-content">
-        <MdEditor v-model="text"/>
+        <MdEditor v-model="text" @onUploadImg="onUploadImg"/>
       </div>
     </div>
   </transition>
@@ -11,7 +11,10 @@
 <script lang="ts">
 import { ref, watch, defineComponent} from 'vue'
 import { MdEditor } from 'md-editor-v3'
+import axios from 'axios';
 import 'md-editor-v3/lib/style.css'
+
+type UploadImgCallback = (urls: string[]) => void
 
 export default defineComponent({
   props: {
@@ -35,6 +38,26 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const text = ref('')
+    const onUploadImg = async (files: File[], callback: UploadImgCallback) => {
+      const res = await Promise.all(
+        files.map((file) => {
+          return new Promise<{ data: { url: string } }>((resolve, reject) => {
+            const form = new FormData()
+            form.append('file', file)
+            axios
+              .post('/api/img/uploads', form, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              })
+              .then((response) => resolve(response))
+              .catch((error) => reject(error))
+          })
+        })
+      )
+      callback(res.map((item) => item.data.url))
+    }
+
     watch(() => props.editingText, (newValue: string, oldValue: string) => {
       console.log(`outter changed from ${oldValue} to ${newValue}`)
       text.value = newValue
@@ -44,7 +67,8 @@ export default defineComponent({
       emit('updateText', text.value)
     })
     return {
-      text: text
+      text,
+      onUploadImg
     }
   }
 })

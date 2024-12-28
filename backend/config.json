@@ -1,0 +1,5 @@
+{
+  "listen": "127.0.0.1:1080",
+  "apiBase": "http://127.0.0.1:1080/",
+  "authToken": "your-secret-token"
+}

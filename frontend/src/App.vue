@@ -9,7 +9,6 @@
       </div>
       <div class="sidebar-buttom-funct">
         <button>提交</button>
-        <button @click="toggleEditor">编辑</button>
         <button @click="createUserAssistantPairs">添加节点</button>
       </div>
       <footer>
@@ -25,6 +24,7 @@
 <script lang="ts">
 import {ref, toRef} from 'vue'
 import {defineComponent} from 'vue'
+
 import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue'
 import TextEditor from '@/components/TextEditor.vue'
 import { openOuterEditor, editingNode } from '@/components/ContextTreeStore'

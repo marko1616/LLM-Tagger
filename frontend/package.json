@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-private-methods": "^7.18.6",
+    "axios": "^1.7.9",
     "core-js": "^3.8.3",
     "md-editor-v3": "^5.1.1",
     "rete": "^2.0.5",
