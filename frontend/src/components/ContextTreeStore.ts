@@ -1,9 +1,9 @@
-import { ref, reactive } from 'vue';
+import { ref, reactive } from 'vue'
 
 const editingNode = reactive({
   nodeId: '',
-  data: '',
-});
+  data: ''
+})
 const openOuterEditor = ref<() => void>(() => {})
 
 export { editingNode, openOuterEditor }

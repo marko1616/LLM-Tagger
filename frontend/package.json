@@ -10,7 +10,6 @@
   "dependencies": {
     "@babel/plugin-proposal-private-methods": "^7.18.6",
     "core-js": "^3.8.3",
-    "eslint-config-google": "^0.14.0",
     "md-editor-v3": "^5.1.1",
     "rete": "^2.0.5",
     "rete-area-plugin": "^2.1.3",

@@ -2,7 +2,7 @@ import {NodeEditor, GetSchemes, ClassicPreset, BaseSchemes} from 'rete'
 import {AreaPlugin, AreaExtensions} from 'rete-area-plugin'
 import {ConnectionPlugin, Presets as ConnectionPresets} from 'rete-connection-plugin'
 import {VuePlugin, Presets, VueArea2D} from 'rete-vue-plugin'
-import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets } from "rete-context-menu-plugin";
+import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets } from 'rete-context-menu-plugin'
 
 import TextNode from './ContextNode.vue'
 import Connection from './NodeConnection.vue'
@@ -47,39 +47,39 @@ export class reteEditor {
     this.render = new VuePlugin<Schemes, AreaExtra>()
     this.contextMenu = new ContextMenuPlugin<Schemes>({
       items: ContextMenuPresets.classic.setup([
-        ["User Node", () => this.userNodeFactory()],
-        ["Assistant Node", () => this.assistantNodeFactory()]
+        ['User Node', () => this.userNodeFactory()],
+        ['Assistant Node', () => this.assistantNodeFactory()]
       ])
-    });
+    })
 
-    this.area.use(this.contextMenu);
+    this.area.use(this.contextMenu)
     AreaExtensions.selectableNodes(this.area, AreaExtensions.selector(), {
       accumulating: AreaExtensions.accumulateOnCtrl()
     })
   
-    this.render.addPreset(Presets.contextMenu.setup());
+    this.render.addPreset(Presets.contextMenu.setup())
     this.render.addPreset(
-        Presets.classic.setup({
-          customize: {
-            node(context) {
-              if (context.payload.label.startsWith('Input')) {
-                return TextNode
-              }
-              return Presets.classic.Node
-            },
-            control(data) {
-              if (data.payload instanceof PromptTextArea) {
-                return TextAreaControl
-              }
-            },
-            socket(context) {
-              return Socket
-            },
-            connection(context) {
-              return Connection
+      Presets.classic.setup({
+        customize: {
+          node(context) {
+            if (context.payload.label.startsWith('Input')) {
+              return TextNode
             }
+            return Presets.classic.Node
+          },
+          control(data) {
+            if (data.payload instanceof PromptTextArea) {
+              return TextAreaControl
+            }
+          },
+          socket(context) {
+            return Socket
+          },
+          connection(context) {
+            return Connection
           }
-        })
+        }
+      })
     )
     this.connection.addPreset(ConnectionPresets.classic.setup())
   
@@ -132,7 +132,7 @@ export class reteEditor {
   }
 
   systemNodeFactory() {
-    const systemNode = new ClassicPreset.Node(`Input-System`)
+    const systemNode = new ClassicPreset.Node('Input-System')
     systemNode.addControl('TextArea', new PromptTextArea())
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     systemNode.addInput('context-in', new ClassicPreset.Input(this.socket))
@@ -141,7 +141,7 @@ export class reteEditor {
   }
 
   userNodeFactory() {
-    const userNode = new ClassicPreset.Node(`Input-User`)
+    const userNode = new ClassicPreset.Node('Input-User')
     userNode.addControl('TextArea', new PromptTextArea())
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
@@ -149,7 +149,7 @@ export class reteEditor {
   }
 
   assistantNodeFactory() {
-    const assistantNode = new ClassicPreset.Node(`Input-Assistant`)
+    const assistantNode = new ClassicPreset.Node('Input-Assistant')
     assistantNode.addControl('TextArea', new PromptTextArea())
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))

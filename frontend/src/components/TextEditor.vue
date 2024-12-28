@@ -10,8 +10,8 @@
 
 <script lang="ts">
 import { ref, watch, defineComponent} from 'vue'
-import { MdEditor } from 'md-editor-v3';
-import 'md-editor-v3/lib/style.css';
+import { MdEditor } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
 
 export default defineComponent({
   props: {
@@ -34,15 +34,15 @@ export default defineComponent({
     MdEditor
   },
   setup(props, { emit }) {
-    const text = ref("")
+    const text = ref('')
     watch(() => props.editingText, (newValue: string, oldValue: string) => {
-      console.log(`outter changed from ${oldValue} to ${newValue}`);
+      console.log(`outter changed from ${oldValue} to ${newValue}`)
       text.value = newValue
-    });
+    })
     watch(text, (newValue: string, oldValue: string) => {
-      console.log(`inner changed from ${oldValue} to ${newValue}`);
+      console.log(`inner changed from ${oldValue} to ${newValue}`)
       emit('updateText', text.value)
-    });
+    })
     return {
       text: text
     }

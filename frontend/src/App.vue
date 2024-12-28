@@ -25,7 +25,7 @@
 <script lang="ts">
 import {ref, toRef} from 'vue'
 import {defineComponent} from 'vue'
-import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue';
+import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue'
 import TextEditor from '@/components/TextEditor.vue'
 import { openOuterEditor, editingNode } from '@/components/ContextTreeStore'
 
@@ -49,7 +49,7 @@ export default defineComponent({
   },
   setup(props, { expose }) {
     const isEditorVisible = ref(false)
-    const contextTreeRef = ref<ContextTreeInstance | null>(null);
+    const contextTreeRef = ref<ContextTreeInstance | null>(null)
     const editingTextRef = toRef(editingNode, 'data')
 
     const createUserAssistantPairs = () => {

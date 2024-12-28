@@ -2,24 +2,52 @@
   <div class="data-input-container" :class="{ 'is-collapsed': data.collapsed.value }">
     <textarea
       class="data-input"
-      ref="dataInput"
+      ref="textareaRef"
       v-model="data.value.value"
       @pointerdown.stop=""
       @input="data.onInput"
-      @update:modelValue="data.onChange"
     ></textarea>
     <div class="toggle-button"
         @pointerdown.stop=""
         @dblclick.stop=""
-        @click="data.onCollapse($refs.dataInput)">
+        @click="data.onCollapse(textareaRef)">
         {{ data.collapsed.value ? '展开' : '折叠' }}
   </div>
   </div>
 </template>
 
 <script lang="ts">
+import { ref, watch } from 'vue'
+import { PromptTextArea } from './TextArea'
+
+interface Props {
+  data: PromptTextArea;
+}
+
 export default {
-  props: ['data']
+  props: {
+    data: {
+      type: PromptTextArea,
+      required: true
+    }
+  },
+  setup(props: Props) {
+    const textareaRef = ref<HTMLTextAreaElement | null>(null)
+    watch(() => props.data.value.value, (newValue) => {
+      if(textareaRef.value == null) {
+        return
+      }
+      if(props.data.collapsed.value) {
+        textareaRef.value.style.height = 'auto'
+      } else {
+        textareaRef.value.style.height = 'auto'
+        textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
+      }
+    })
+    return {
+      textareaRef
+    }
+  }
 }
 </script>
 
@@ -85,6 +113,7 @@ export default {
     }
 
     .toggle-button {
+      user-select: none;
       background: linear-gradient(to top, rgba($content-bg-color, 1), rgba($content-bg-color, 0));
     }
   }

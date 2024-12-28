@@ -19,25 +19,6 @@ class PromptTextArea extends ClassicPreset.Control {
   onInput(event: InputEvent) {
     const target = event.target as HTMLTextAreaElement
     this.value.value = target.value
-
-    if(this.collapsed.value) {
-      target.style.height = 'auto'
-    } else {
-      target.style.height = 'auto'
-      target.style.height = target.scrollHeight + 'px'
-    }
-  }
-
-  onChange(event: InputEvent) {
-    const target = event.target as HTMLTextAreaElement
-    console.log("TGTED")
-
-    if(this.collapsed.value) {
-      target.style.height = 'auto'
-    } else {
-      target.style.height = 'auto'
-      target.style.height = target.scrollHeight + 'px'
-    }
   }
 
   onCollapse(target: HTMLTextAreaElement) {
