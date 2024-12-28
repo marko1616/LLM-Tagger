@@ -6,6 +6,7 @@
       v-model="data.value.value"
       @pointerdown.stop=""
       @input="data.onInput"
+      @update:modelValue="data.onChange"
     ></textarea>
     <div class="toggle-button"
         @pointerdown.stop=""

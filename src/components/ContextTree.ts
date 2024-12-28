@@ -92,8 +92,15 @@ export class reteEditor {
     AreaExtensions.simpleNodesOrder(this.area)  
     AreaExtensions.zoomAt(this.area, this.editor.getNodes())
 
+    // Create system node that can't be deleted.
     this.rootNode = this.systemNodeFactory()
     this.editor.addNode(this.rootNode)
+    this.editor.addPipe(event => {
+      if (event.type === 'noderemove' && event.data.id === this.rootNode.id) {
+        return undefined
+      }
+      return event
+    })
   }
 
   destroy() {
@@ -129,6 +136,7 @@ export class reteEditor {
     systemNode.addControl('TextArea', new PromptTextArea())
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     systemNode.addInput('context-in', new ClassicPreset.Input(this.socket))
+    console.log(systemNode)
     return systemNode
   }
 

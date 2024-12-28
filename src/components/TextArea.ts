@@ -1,8 +1,6 @@
 import {ref} from 'vue'
 import {ClassicPreset} from 'rete'
 
-import DOMPurify from 'dompurify';
-
 class PromptTextArea extends ClassicPreset.Control {
   value = ref('')
   collapsed = ref(false)
@@ -32,6 +30,7 @@ class PromptTextArea extends ClassicPreset.Control {
 
   onChange(event: InputEvent) {
     const target = event.target as HTMLTextAreaElement
+    console.log("TGTED")
 
     if(this.collapsed.value) {
       target.style.height = 'auto'
