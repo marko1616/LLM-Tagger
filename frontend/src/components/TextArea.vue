@@ -10,7 +10,7 @@
     <div class="toggle-button"
         @pointerdown.stop=""
         @dblclick.stop=""
-        @click="data.onCollapse(textareaRef)">
+        @click="data.onCollapse($refs.textareaRef)">
         {{ data.collapsed.value ? '展开' : '折叠' }}
   </div>
   </div>

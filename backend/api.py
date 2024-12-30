@@ -10,10 +10,15 @@ import json
 
 class Config(BaseModel):
     listen: str
-    apiBase: str
-    authToken: str
+    api_base: str
+    auth_token: str
 
-def load_config():
+def load_config() -> None:
+    """
+    Loads the configuration from the config.json file.
+    """
+    if not os.path.exists("config.json"):
+        raise RuntimeError("config.json not found")
     try:
         with open("config.json", "r") as f:
             return Config(**json.load(f))
@@ -30,8 +35,13 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"]
 )
 
-def verify_auth_token(authorization: str = Header(None)):
-    if authorization != config.authToken:
+def verify_auth_token(authorization: str = Header(None)) -> str:
+    """
+    Verifies the provided authorization token.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization token is required")
+    if authorization != config.auth_token:
         raise HTTPException(status_code=401, detail="Invalid token")
     return authorization
 
@@ -39,7 +49,7 @@ UPLOAD_DIR = Path("./uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 @app.post("/api/img/uploads", dependencies=[Depends(verify_auth_token)])
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     """
     Handles uploading of image files.
     """
@@ -56,13 +66,13 @@ async def upload_image(file: UploadFile = File(...)):
     return JSONResponse(
         content={
             "message": "File uploaded successfully",
-            "url": f"{config.apiBase[:-1] if config.apiBase.endswith('/') else config.apiBase}/api/uploads/{file.filename}"
+            "url": f"{config.api_base[:-1] if config.api_base.endswith('/') else config.api_base}/api/uploads/{file.filename}"
         },
         status_code=200
     )
 
 @app.get("/api/uploads/{filename}")
-async def get_uploaded_file(filename: str):
+async def get_uploaded_file(filename: str) -> FileResponse:
     """
     Serves the uploaded file.
     """

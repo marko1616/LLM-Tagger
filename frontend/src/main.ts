@@ -8,10 +8,9 @@ const app = createApp(App)
 axios.get(`/config.json?version=${new Date().getTime()}`)
   .then(response => {
     const config = response.data
-    app.config.globalProperties.$apiBase = config.apiBase
-    axios.defaults.baseURL = config.apiBase
-    console.log(config.apiKey)
-    axios.defaults.headers.common['Authorization'] = config.apiKey
+    app.config.globalProperties.$api_base = config.api_base
+    axios.defaults.baseURL = config.api_base
+    axios.defaults.headers.common['Authorization'] = config.api_token
     app.mount('#app')
   })
   .catch(error => {

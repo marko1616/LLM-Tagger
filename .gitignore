@@ -5,8 +5,6 @@
 /backend/uploads/*
 !/backend/uploads/.gitkeep
 /backend/config.json
-/backend/*.exe
-/backend/*/*.exe
 
 # local env files
 .env.local

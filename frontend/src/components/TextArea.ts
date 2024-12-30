@@ -16,7 +16,7 @@ class PromptTextArea extends ClassicPreset.Control {
     return this.value
   }
 
-  onInput(event: InputEvent) {
+  onInput(event: Event) {
     const target = event.target as HTMLTextAreaElement
     this.value.value = target.value
   }

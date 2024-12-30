@@ -123,6 +123,10 @@ export class reteEditor {
     return this.editor.getConnection(id)
   }
 
+  getNodePosition(id: string) {
+    return this.area.nodeViews.get(id)?.position
+  }
+
   createUserAssistantPairs() {
     const userNode = this.userNodeFactory()
     const assistantNode = this.assistantNodeFactory()
@@ -135,8 +139,6 @@ export class reteEditor {
     const systemNode = new ClassicPreset.Node('Input-System')
     systemNode.addControl('TextArea', new PromptTextArea())
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
-    systemNode.addInput('context-in', new ClassicPreset.Input(this.socket))
-    console.log(systemNode)
     return systemNode
   }
 
