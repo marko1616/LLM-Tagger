@@ -1,19 +1,17 @@
 import {ref} from 'vue'
 import {ClassicPreset} from 'rete'
 
-class PromptTextArea extends ClassicPreset.Control {
+class PromptTextInput extends ClassicPreset.Control {
   value = ref('')
+  title = ref('')
   collapsed = ref(false)
-  constructor() {
+  constructor(title: string) {
     super()
+    this.title.value = title
   }
 
   update(data: string) {
     this.value.value = data
-  }
-
-  getData() {
-    return this.value
   }
 
   onInput(event: Event) {
@@ -33,4 +31,4 @@ class PromptTextArea extends ClassicPreset.Control {
   }
 }
 
-export {PromptTextArea}
+export {PromptTextInput}

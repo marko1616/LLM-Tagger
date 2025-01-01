@@ -5,7 +5,7 @@
       data-testid="node"
     >
       <div class="title-container">
-        <div class="title" data-testid="title" @click="doEditingNode" @pointerdown.stop="">{{ data.label }}</div>
+        <div class="title" data-testid="title">{{ data.label }}</div>
         <div class="title-padding"></div>
       </div>
 
@@ -87,10 +87,8 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, PropType, watch} from 'vue'
+import {defineComponent, PropType} from 'vue'
 import {Ref} from 'rete-vue-plugin'
-
-import { editingNode, openOuterEditor } from './ContextTreeStore'
 
 interface NodeData {
   id: string;
@@ -118,7 +116,6 @@ interface OutputData {
 }
 
 interface ControlData {
-  getData: () => string;
   update: (data: string) => void;
 }
 
@@ -157,24 +154,10 @@ export default defineComponent({
     },
     controls() {
       return sortByIndex(Object.entries(this.data.controls))
-    },
-    doEditingNode() {
-      const control = this.data.controls['TextArea']
-      editingNode.nodeId = this.data.id
-      editingNode.data = control.getData()
-      openOuterEditor.value()
     }
   },
   components: {
     Ref
-  },
-  setup(props) {
-    watch(editingNode, (newValue, oldValue) => {
-      const control = props.data.controls['TextArea']
-      if(editingNode.nodeId == props.data.id) {
-        control.update(newValue.data)
-      }
-    })
   }
 })
 </script>
@@ -202,7 +185,6 @@ export default defineComponent({
   }
 
   & .title {
-    cursor: pointer;
     display: flex;
     user-select: none;
     color: $content-color;
@@ -210,12 +192,6 @@ export default defineComponent({
     font-size: 18px;
     padding: 4px;
     text-align: center;
-
-    transition: all 0.3s ease;
-  }
-
-  & .title:hover {
-    color: $content-select-color;
   }
 
   & .outputs,

@@ -1,5 +1,9 @@
 <template>
   <div class="data-input-container" :class="{ 'is-collapsed': data.collapsed.value }">
+    <div class="title-container">
+        <div class="title" data-testid="title" @click="doEditingNode" @pointerdown.stop="">{{ data.title.value }}</div>
+        <div class="title-padding"></div>
+      </div>
     <textarea
       class="data-input"
       ref="textareaRef"
@@ -11,24 +15,33 @@
         @pointerdown.stop=""
         @dblclick.stop=""
         @click="data.onCollapse($refs.textareaRef)">
-        {{ data.collapsed.value ? '展开' : '折叠' }}
+        {{ data.collapsed.value ? 'expand' : 'collapse' }}
   </div>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, watch } from 'vue'
-import { PromptTextArea } from './TextArea'
+import { defineComponent, ref, watch } from 'vue'
+import { PromptTextInput } from './TextInput'
+
+import { editingControl, openOuterEditor } from './ContextTreeStore'
 
 interface Props {
-  data: PromptTextArea;
+  data: PromptTextInput;
 }
 
-export default {
+export default defineComponent({
   props: {
     data: {
-      type: PromptTextArea,
+      type: PromptTextInput,
       required: true
+    }
+  },
+  methods: {
+    doEditingNode() {
+      editingControl.controlId = this.data.id
+      editingControl.data = this.data.value.value
+      openOuterEditor.value()
     }
   },
   setup(props: Props) {
@@ -44,17 +57,39 @@ export default {
         textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
       }
     })
+    watch(editingControl, (newValue, oldValue) => {
+      if(editingControl.controlId == props.data.id) {
+        props.data.value.value = newValue.data
+      }
+    })
     return {
       textareaRef
     }
   }
-}
+})
 </script>
 
 <style lang="scss" scoped>
 @import "@/styles/color.scss";
 
 .data-input-container {
+  & .title {
+    cursor: pointer;
+    display: flex;
+    user-select: none;
+    color: $content-color;
+    font-family: sans-serif;
+    font-size: 14px;
+    padding: 4px;
+    text-align: center;
+
+    transition: all 0.3s ease;
+  }
+
+  & .title:hover {
+    color: $content-select-color;
+  }
+
   display: flex;
   flex-grow: 0;
   flex-direction: column;

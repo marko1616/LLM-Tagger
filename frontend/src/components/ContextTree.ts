@@ -8,8 +8,8 @@ import TextNode from './ContextNode.vue'
 import Connection from './NodeConnection.vue'
 import Socket from './NodeSocket.vue'
 
-import {PromptTextArea} from './TextArea'
-import TextAreaControl from './TextArea.vue'
+import {PromptTextInput} from './TextInput'
+import TextInputControl from './TextInput.vue'
 
 import '@/styles/editorbg.scss'
 
@@ -48,7 +48,8 @@ export class reteEditor {
     this.contextMenu = new ContextMenuPlugin<Schemes>({
       items: ContextMenuPresets.classic.setup([
         ['User Node', () => this.userNodeFactory()],
-        ['Assistant Node', () => this.assistantNodeFactory()]
+        ['Assistant Node', () => this.assistantNodeFactory()],
+        ['Assistant Pairwise Node', () => this.assistantPairwiseNodeFactory()],
       ])
     })
 
@@ -68,8 +69,8 @@ export class reteEditor {
             return Presets.classic.Node
           },
           control(data) {
-            if (data.payload instanceof PromptTextArea) {
-              return TextAreaControl
+            if (data.payload instanceof PromptTextInput) {
+              return TextInputControl
             }
           },
           socket(context) {
@@ -137,14 +138,14 @@ export class reteEditor {
 
   systemNodeFactory() {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextArea', new PromptTextArea())
+    systemNode.addControl('TextInput', new PromptTextInput("System"))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
   userNodeFactory() {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextArea', new PromptTextArea())
+    userNode.addControl('TextInput', new PromptTextInput("User"))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
@@ -152,9 +153,18 @@ export class reteEditor {
 
   assistantNodeFactory() {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextArea', new PromptTextArea())
+    assistantNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive"))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
+  }
+
+  assistantPairwiseNodeFactory() {
+    const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
+    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive"))
+    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput("Assistant negative"))
+    assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
+    assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
+    return assistantPairwiseNode
   }
 }

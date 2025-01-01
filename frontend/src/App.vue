@@ -27,7 +27,7 @@ import {defineComponent} from 'vue'
 
 import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue'
 import TextEditor from '@/components/TextEditor.vue'
-import { openOuterEditor, editingNode } from '@/components/ContextTreeStore'
+import { openOuterEditor, editingControl } from '@/components/ContextTreeStore'
 
 export default defineComponent({
   components: {
@@ -47,17 +47,17 @@ export default defineComponent({
       this.toggleEditor()
     }
   },
-  setup(props, { expose }) {
+  setup() {
     const isEditorVisible = ref(false)
     const contextTreeRef = ref<ContextTreeInstance | null>(null)
-    const editingTextRef = toRef(editingNode, 'data')
+    const editingTextRef = toRef(editingControl, 'data')
 
     const createUserAssistantPairs = () => {
       contextTreeRef.value?.createUserAssistantPairs()
     }
 
     const updateText = (text: string) => {
-      editingNode.data = text
+      editingControl.data = text
     }
 
     return {
