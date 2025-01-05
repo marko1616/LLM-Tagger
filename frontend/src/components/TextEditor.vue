@@ -59,11 +59,9 @@ export default defineComponent({
     }
 
     watch(() => props.editingText, (newValue: string, oldValue: string) => {
-      console.log(`outter changed from ${oldValue} to ${newValue}`)
       text.value = newValue
     })
     watch(text, (newValue: string, oldValue: string) => {
-      console.log(`inner changed from ${oldValue} to ${newValue}`)
       emit('updateText', text.value)
     })
     return {
@@ -124,8 +122,15 @@ export default defineComponent({
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 95vw;
+  min-width: 75vw;
+  max-height: 95vh;
   overflow: auto;
+}
+</style>
+
+<style>
+.md-editor {
+  min-height: 75vh;
 }
 </style>

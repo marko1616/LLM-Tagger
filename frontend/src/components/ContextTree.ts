@@ -1,8 +1,8 @@
 import {NodeEditor, GetSchemes, ClassicPreset, BaseSchemes} from 'rete'
-import {AreaPlugin, AreaExtensions} from 'rete-area-plugin'
+import {AreaPlugin, AreaExtensions, BaseAreaPlugin, RenderSignal} from 'rete-area-plugin'
 import {ConnectionPlugin, Presets as ConnectionPresets} from 'rete-connection-plugin'
 import {VuePlugin, Presets, VueArea2D} from 'rete-vue-plugin'
-import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets } from 'rete-context-menu-plugin'
+import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets} from 'rete-context-menu-plugin'
 
 import TextNode from './ContextNode.vue'
 import Connection from './NodeConnection.vue'
@@ -13,11 +13,26 @@ import TextInputControl from './TextInput.vue'
 
 import '@/styles/editorbg.scss'
 
+type ContextMenuItem = {
+  label: string
+  key: string
+  handler(): void | Promise<void>
+  subitems?: ContextMenuItem[]
+}
+
+type Position = {
+  x: number
+  y: number
+}
+
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
 >
-type AreaExtra = VueArea2D<Schemes> | ContextMenuExtra
+
+type KeyDeleteSignal = {type: 'keydelete', data: {}}
+
+type AreaExtra = VueArea2D<Schemes> | ContextMenuExtra | KeyDeleteSignal
 
 function addCustomBackground<S extends BaseSchemes, K>(
     area: AreaPlugin<S, K>
@@ -46,11 +61,26 @@ export class reteEditor {
     this.connection = new ConnectionPlugin<Schemes, AreaExtra>()
     this.render = new VuePlugin<Schemes, AreaExtra>()
     this.contextMenu = new ContextMenuPlugin<Schemes>({
-      items: ContextMenuPresets.classic.setup([
-        ['User Node', () => this.userNodeFactory()],
-        ['Assistant Node', () => this.assistantNodeFactory()],
-        ['Assistant Pairwise Node', () => this.assistantPairwiseNodeFactory()],
-      ])
+      items: (context, plugin) => {
+        const area = plugin.parentScope<BaseAreaPlugin<Schemes, any>>(BaseAreaPlugin)
+        const classicPreset = ContextMenuPresets.classic.setup([
+          ['User Node', () => this.userNodeFactory()],
+          ['Assistant Node', () => this.assistantNodeFactory()],
+          ['Assistant Pairwise Node', () => this.assistantPairwiseNodeFactory()],
+        ])
+        const createUserAssistantPairs: ContextMenuItem = {
+          label: 'Create User-Assistant Pairs',
+          key: 'createUserAssistantPairs',
+          handler: (async () => await this.createUserAssistantPairs(area.area.pointer))
+        }
+        var defaultMenu = classicPreset(context, plugin)
+
+        if(context == 'root') {
+          defaultMenu.list.push(createUserAssistantPairs)
+        }
+
+        return defaultMenu
+      }
     })
 
     this.area.use(this.contextMenu)
@@ -89,6 +119,10 @@ export class reteEditor {
     this.editor.use(this.area)
     this.area.use(this.connection)
     this.area.use(this.render)
+
+    this.area.addPipe(event => {
+      return event
+    })
   
     AreaExtensions.simpleNodesOrder(this.area)  
     AreaExtensions.zoomAt(this.area, this.editor.getNodes())
@@ -98,6 +132,28 @@ export class reteEditor {
     this.editor.addNode(this.rootNode)
     this.editor.addPipe(event => {
       if (event.type === 'noderemove' && event.data.id === this.rootNode.id) {
+        return undefined
+      }
+      return event
+    })
+
+    // Remove all selected nodes on key delete.
+    window.addEventListener("keydown", (event) => {if(event.key == "Delete") this.area.emit({type: 'keydelete', data: {}})});
+    this.area.addPipe(event => {
+      if (event.type === 'keydelete') {
+        this.editor.getNodes().forEach(node => {
+          if(node.selected) {
+            const nodeId = node.id
+            const connections = this.editor.getConnections().filter(c => {
+              return c.source === nodeId || c.target === nodeId
+            })
+  
+            for (const connection of connections) {
+              this.editor.removeConnection(connection.id)
+            }
+            this.editor.removeNode(nodeId)
+          }
+        })
         return undefined
       }
       return event
@@ -128,12 +184,17 @@ export class reteEditor {
     return this.area.nodeViews.get(id)?.position
   }
 
-  createUserAssistantPairs() {
+  async createUserAssistantPairs(position: Position | null = null) {
     const userNode = this.userNodeFactory()
     const assistantNode = this.assistantNodeFactory()
-    this.editor.addNode(userNode)
-    this.editor.addNode(assistantNode)
-    this.editor.addConnection(new ClassicPreset.Connection(userNode, 'context-out', assistantNode, 'context-in'))
+    await this.editor.addNode(userNode)
+    await this.editor.addNode(assistantNode)
+    await this.editor.addConnection(new ClassicPreset.Connection(userNode, 'context-out', assistantNode, 'context-in'))
+
+    if(position) {
+      await this.area.translate(userNode.id, position)
+      await this.area.translate(assistantNode.id, {x: position.x + 500, y: position.y})
+    }
   }
 
   systemNodeFactory() {
