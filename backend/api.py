@@ -14,6 +14,7 @@ class Config(BaseModel):
     listen: str
     api_base: str
     auth_token: str
+    json_indent: int
 
 class Role(str, Enum):
     SYSTEM = "system"
@@ -31,11 +32,15 @@ class NodeItem(BaseModel):
     positive: str
     negative: Optional[str]
 
+class DatasetItem(BaseModel):
+    name: Optional[str]
+    nodeItems: list[NodeItem]
+
 class Dataset(BaseModel):
     name: str
     timestamp: int
     override: bool
-    data: list[NodeItem]
+    items: list[DatasetItem]
 
 def load_config() -> None:
     """
@@ -111,10 +116,10 @@ async def get_uploaded_file(filename: str) -> FileResponse:
     file_path = UPLOAD_DIR / filename
 
     if not file_path.exists() or not file_path.is_file():
-        raise JSONResponse(content={"message": "File not found"}, status_code=404)
+        return JSONResponse(content={"message": "File not found"}, status_code=404)
 
     if not file_path.resolve().is_relative_to(UPLOAD_DIR.resolve()):
-        raise JSONResponse(content={"message": "Invalid file path"}, status_code=400)
+        return JSONResponse(content={"message": "Invalid file path"}, status_code=400)
 
     return FileResponse(file_path)
 
@@ -134,14 +139,14 @@ async def create_dataset(dataset: Dataset) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{dataset.name}.json"
 
     if dataset_dir.exists():
-        raise JSONResponse(content={"message":"Dataset already exists."}, status_code=400)
+        return JSONResponse(content={"message":"Dataset already exists."}, status_code=400)
     
     # Validate timestamp
     if not 0 <= dataset.timestamp <= (2**64 - 1):
-        raise JSONResponse(content={"message":"Invalid timestamp."}, status_code=400)
+        return JSONResponse(content={"message":"Invalid timestamp."}, status_code=400)
 
     with open(dataset_dir, "w") as f:
-        json.dump(dataset.model_dump_json(), f)
+        f.write(dataset.model_dump_json(indent=config.json_indent))
 
     return JSONResponse(content={"message":"Dataset successfully created."}, status_code=200)
 
@@ -153,7 +158,7 @@ async def get_dataset(name: str) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        raise JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
 
     with open(dataset_dir, "r") as f:
         return JSONResponse(content=json.load(f), status_code=200)
@@ -166,12 +171,16 @@ async def update_dataset(name: str, dataset: Dataset) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        raise JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+    
+    # Validate timestamp
+    if not 0 <= dataset.timestamp <= (2**64 - 1):
+        return JSONResponse(content={"message":"Invalid timestamp."}, status_code=400)
 
     with open(dataset_dir, "r") as f:
         data = json.load(f)
     if data.get("timestamp") >= dataset.timestamp and not dataset.override:
-        raise JSONResponse(content={"message":"The provided timestamp is not earlier than the dataset's current timestamp and override is not enabled."}, status_code=400)
+        return JSONResponse(content={"message":"The provided timestamp is not earlier than the dataset's current timestamp and override is not enabled."}, status_code=400)
 
 @app.delete("/api/datasets/{name}", dependencies=[Depends(verify_auth_token)])
 async def delete_dataset(name: str) -> JSONResponse:
@@ -181,7 +190,7 @@ async def delete_dataset(name: str) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        raise JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
 
     dataset_dir.unlink()
     return JSONResponse(content={"message":"Dataset successfully deleted."}, status_code=200)

@@ -5,9 +5,10 @@
       <ContextTree class="context-tree" ref="contextTreeRef"/>
     </div>
     <div class="sidebar">
-      <div class="sidebar-main-funct">
+      <div class="sidebar-main-panel">
+        <DatasetPanel/>
       </div>
-      <div class="sidebar-buttom-funct">
+      <div class="sidebar-buttom-panel">
         <button>提交</button>
         <button @click="createUserAssistantPairs">添加节点</button>
       </div>
@@ -22,17 +23,18 @@
 </template>
 
 <script lang="ts">
-import {ref, toRef} from 'vue'
-import {defineComponent} from 'vue'
+import {ref, toRef, defineComponent} from 'vue'
 
 import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue'
-import TextEditor from '@/components/TextEditor.vue'
 import { openOuterEditor, editingControl } from '@/components/ContextTreeStore'
+import TextEditor from '@/components/TextEditor.vue'
+import DatasetPanel from './components/DatasetPanel.vue'
 
 export default defineComponent({
   components: {
     ContextTree,
-    TextEditor
+    TextEditor,
+    DatasetPanel
   },
   methods: {
     toggleEditor() {
@@ -143,12 +145,12 @@ body {
   padding-right: 1vw;
 }
 
-.sidebar-main-funct {
+.sidebar-main-panel {
   display: flex;
   flex: 1;
 }
 
-.sidebar-buttom-funct {
+.sidebar-buttom-panel {
   display: flex;
   justify-content: center;
 }

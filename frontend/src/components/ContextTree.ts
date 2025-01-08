@@ -1,5 +1,5 @@
 import {NodeEditor, GetSchemes, ClassicPreset, BaseSchemes} from 'rete'
-import {AreaPlugin, AreaExtensions, BaseAreaPlugin, RenderSignal} from 'rete-area-plugin'
+import {AreaPlugin, AreaExtensions, BaseAreaPlugin} from 'rete-area-plugin'
 import {ConnectionPlugin, Presets as ConnectionPresets} from 'rete-connection-plugin'
 import {VuePlugin, Presets, VueArea2D} from 'rete-vue-plugin'
 import {ContextMenuExtra, ContextMenuPlugin, Presets as ContextMenuPresets} from 'rete-context-menu-plugin'
@@ -140,6 +140,7 @@ export class reteEditor {
     // Remove all selected nodes on key delete.
     window.addEventListener("keydown", (event) => {if(event.key == "Delete") this.area.emit({type: 'keydelete', data: {}})});
     this.area.addPipe(event => {
+      console.log(event)
       if (event.type === 'keydelete') {
         this.editor.getNodes().forEach(node => {
           if(node.selected) {
@@ -184,6 +185,17 @@ export class reteEditor {
     return this.area.nodeViews.get(id)?.position
   }
 
+  emitRenderCallback() {
+    const nodes = this.editor.getNodes()
+    console.log("EMITED")
+    nodes.forEach(node => {
+      this.area.emit({
+        type: 'nodedragged',
+        data: node
+      })
+    })
+  }
+
   async createUserAssistantPairs(position: Position | null = null) {
     const userNode = this.userNodeFactory()
     const assistantNode = this.assistantNodeFactory()
@@ -199,14 +211,14 @@ export class reteEditor {
 
   systemNodeFactory() {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput("System"))
+    systemNode.addControl('TextInput', new PromptTextInput("System", this.emitRenderCallback.bind(this)))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
   userNodeFactory() {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput("User"))
+    userNode.addControl('TextInput', new PromptTextInput("User", this.emitRenderCallback.bind(this)))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
@@ -214,7 +226,7 @@ export class reteEditor {
 
   assistantNodeFactory() {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive"))
+    assistantNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive", this.emitRenderCallback.bind(this)))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
@@ -222,8 +234,8 @@ export class reteEditor {
 
   assistantPairwiseNodeFactory() {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive"))
-    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput("Assistant negative"))
+    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive", this.emitRenderCallback.bind(this)))
+    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput("Assistant negative", this.emitRenderCallback.bind(this)))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode

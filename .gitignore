@@ -4,6 +4,8 @@
 
 /backend/uploads/*
 !/backend/uploads/.gitkeep
+/backend/datasets/*
+!/backend/datasets/.gitkeep
 /backend/config.json
 
 # local env files

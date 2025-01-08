@@ -4,10 +4,12 @@ import {ClassicPreset} from 'rete'
 class PromptTextInput extends ClassicPreset.Control {
   value = ref('')
   title = ref('')
-  collapsed = ref(false)
-  constructor(title: string) {
+  emitRenderCallback?: () => void
+
+  constructor(title: string, emitRenderCallback?: () => void) {
     super()
     this.title.value = title
+    this.emitRenderCallback = emitRenderCallback
   }
 
   update(data: string) {
@@ -19,15 +21,8 @@ class PromptTextInput extends ClassicPreset.Control {
     this.value.value = target.value
   }
 
-  onCollapse(target: HTMLTextAreaElement) {
-    this.collapsed.value = !this.collapsed.value
-
-    if(this.collapsed.value) {
-      target.style.height = 'auto'
-    } else {
-      target.style.height = 'auto'
-      target.style.height = target.scrollHeight + 'px'
-    }
+  emitRender() {
+    this.emitRenderCallback?.()
   }
 }
 

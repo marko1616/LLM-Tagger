@@ -113,7 +113,7 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1024;
 }
 
 .modal-content {
@@ -122,9 +122,8 @@ export default defineComponent({
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-width: 95vw;
-  min-width: 75vw;
-  max-height: 95vh;
+  min-width: 1024px;
+  max-height: 512px;
   overflow: auto;
 }
 </style>

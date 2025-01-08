@@ -1,5 +1,5 @@
 <template>
-  <div class="data-input-container" :class="{ 'is-collapsed': data.collapsed.value }">
+  <div class="data-input-container">
     <div class="title-container">
         <div class="title" data-testid="title" @click="doEditingNode" @pointerdown.stop="">{{ data.title.value }}</div>
         <div class="title-padding"></div>
@@ -11,12 +11,6 @@
       @pointerdown.stop=""
       @input="data.onInput"
     ></textarea>
-    <div class="toggle-button"
-        @pointerdown.stop=""
-        @dblclick.stop=""
-        @click="data.onCollapse($refs.textareaRef)">
-        {{ data.collapsed.value ? 'expand' : 'collapse' }}
-  </div>
   </div>
 </template>
 
@@ -44,25 +38,23 @@ export default defineComponent({
       openOuterEditor.value()
     }
   },
+  mounted() {
+    if(this.textareaRef) {
+      this.observer.observe(this.textareaRef);
+    }
+  },
   setup(props: Props) {
     const textareaRef = ref<HTMLTextAreaElement | null>(null)
-    watch(() => props.data.value.value, (newValue) => {
-      if(textareaRef.value == null) {
-        return
-      }
-      if(props.data.collapsed.value) {
-        textareaRef.value.style.height = 'auto'
-      } else {
-        textareaRef.value.style.height = 'auto'
-        textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
-      }
-    })
     watch(editingControl, (newValue, oldValue) => {
       if(editingControl.controlId == props.data.id) {
         props.data.value.value = newValue.data
       }
     })
+    const observer = new ResizeObserver((entries) => {
+      props.data.emitRender()
+    });
     return {
+      observer,
       textareaRef
     }
   }
@@ -110,12 +102,10 @@ export default defineComponent({
 
   .data-input {
     display: flex;
-    overflow-y: none;
     overflow: hidden;
     caret-color: $content-color;
-
     color: $content-color;
-    min-width: 10vw;
+    min-width: 256px;
     max-width: 100%;
     padding: 10px;
     font-size: 16px;
@@ -128,28 +118,13 @@ export default defineComponent({
     word-wrap: break-word;
     min-height: 4vh;
     outline: none;
-
     flex-direction: column;
     align-items: flex-start;
-
-    transition: background-color 0.3s ease, color 0.3s ease;
-    transition: border-color 0.3s ease, color 0.3s ease;
     transition: box-shadow 0.3s ease;
 
     &:hover {
       border-color: $content-border-select-color;
-      box-shadow: 0 0 5px $content-border-select-color;
-    }
-  }
-
-  &.is-collapsed {
-    .data-input {
-      height: 50px;
-    }
-
-    .toggle-button {
-      user-select: none;
-      background: linear-gradient(to top, rgba($content-bg-color, 1), rgba($content-bg-color, 0));
+      box-shadow: 0 0 0 1px $content-border-select-color;
     }
   }
 }

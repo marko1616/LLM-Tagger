@@ -42,9 +42,7 @@ export type ContextTreeInstance = ComponentPublicInstance<{
 @import "@/styles/color.scss";
 
 [rete-context-menu] {
-  width: 40vw;
-  min-width: 100px;
-  max-width: 800px;
+  min-width: max-content;
   background: $container-bg-color;
   border: 2px solid $container-border-color;
   border-radius: 10px;
