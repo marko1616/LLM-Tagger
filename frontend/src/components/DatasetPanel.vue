@@ -6,10 +6,9 @@
         <div class="dropdown-list" :class="{ 'dropdown-active': datasetDroppedDown }">
           <input class="search" placeholder="Search dataset..." />
           <div class="item" @click="createDataset">Create new</div>
-          <div class="item" v-if="datasets.length" v-for="dataset in datasets" :key="dataset">
+          <div class="item" v-for="dataset in datasets" :key="dataset">
             {{ dataset }}
           </div>
-          <p v-else>No datasets found.</p>
         </div>
       </div>
     </div>
@@ -17,14 +16,14 @@
 </template>
 
 <script lang="ts">
-import axios from 'axios';
-import { defineComponent, ref } from 'vue';
+import axios from 'axios'
+import { defineComponent, ref } from 'vue'
 
 enum Role {
-  SYSTEM = "system",
-  USER = "user",
-  ASSISTANT = "assistant",
-  TOOL = "tool",
+  SYSTEM = 'system',
+  USER = 'user',
+  ASSISTANT = 'assistant',
+  TOOL = 'tool',
 }
 
 type NodePosition = {
@@ -62,14 +61,14 @@ export default defineComponent({
       }
 
       axios.post('/api/datasets/create', dataset).then((response) => {
-        console.log(response)
-      });
+        this.flushDatasets()
+      })
     },
     flushDatasets() {
       axios.get('/api/datasets/list').then((response) => {
-        this.datasets.length = 0;
+        this.datasets.length = 0
         this.datasets.push(...response.data.datasets)
-      });
+      })
     }
   },
   mounted() {
@@ -79,7 +78,7 @@ export default defineComponent({
     const datasetDroppedDown = ref(false)
     const datasets = ref<string[]>([])
     return { datasetDroppedDown, datasets }
-  },
+  }
 })
 </script>
 

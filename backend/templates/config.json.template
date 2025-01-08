@@ -1,0 +1,7 @@
+{
+  "listen": "0.0.0.0:80",
+  "api_base": "$api_base",
+  "auth_token": "$api_token",
+  "json_indent": 2
+}
+  

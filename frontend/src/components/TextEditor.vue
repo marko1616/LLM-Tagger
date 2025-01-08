@@ -11,7 +11,7 @@
 <script lang="ts">
 import { ref, watch, defineComponent} from 'vue'
 import { MdEditor } from 'md-editor-v3'
-import axios from 'axios';
+import axios from 'axios'
 import 'md-editor-v3/lib/style.css'
 
 type UploadImgCallback = (urls: string[]) => void
@@ -47,8 +47,8 @@ export default defineComponent({
             axios
               .post('/api/img/uploads', form, {
                 headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
+                  'Content-Type': 'multipart/form-data'
+                }
               })
               .then((response) => resolve(response))
               .catch((error) => reject(error))
@@ -122,8 +122,8 @@ export default defineComponent({
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
-  min-width: 1024px;
-  max-height: 512px;
+  min-width: 75vw;
+  max-height: 90vh;
   overflow: auto;
 }
 </style>

@@ -2,7 +2,7 @@
   <div id="app">
     <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible" :editingText="editingTextRef" @updateText="updateText"/>
     <div class="context-tree-container">
-      <ContextTree class="context-tree" ref="contextTreeRef"/>
+      <NodeEditor class="context-tree" ref="nodeEditorRef"/>
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
@@ -25,14 +25,14 @@
 <script lang="ts">
 import {ref, toRef, defineComponent} from 'vue'
 
-import ContextTree, { ContextTreeInstance } from '@/components/ContextTree.vue'
-import { openOuterEditor, editingControl } from '@/components/ContextTreeStore'
+import NodeEditor, { NodeEditorInstance } from '@/components/NodeEditor.vue'
+import { openOuterEditor, editingControl } from '@/components/NodeEditorStore'
 import TextEditor from '@/components/TextEditor.vue'
 import DatasetPanel from './components/DatasetPanel.vue'
 
 export default defineComponent({
   components: {
-    ContextTree,
+    NodeEditor,
     TextEditor,
     DatasetPanel
   },
@@ -51,11 +51,11 @@ export default defineComponent({
   },
   setup() {
     const isEditorVisible = ref(false)
-    const contextTreeRef = ref<ContextTreeInstance | null>(null)
+    const nodeEditorRef = ref<NodeEditorInstance | null>(null)
     const editingTextRef = toRef(editingControl, 'data')
 
     const createUserAssistantPairs = () => {
-      contextTreeRef.value?.createUserAssistantPairs()
+      nodeEditorRef.value?.createUserAssistantPairs()
     }
 
     const updateText = (text: string) => {
@@ -64,7 +64,7 @@ export default defineComponent({
 
     return {
       createUserAssistantPairs,
-      contextTreeRef,
+      nodeEditorRef,
       isEditorVisible,
       editingTextRef,
       updateText

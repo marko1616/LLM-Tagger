@@ -4,7 +4,7 @@
 
 <script lang="ts">
 import { defineComponent, ComponentPublicInstance } from 'vue'
-import { reteEditor } from './ContextTree'
+import { reteEditor } from './NodeEditor'
 
 export default defineComponent({
   data() {
@@ -22,7 +22,7 @@ export default defineComponent({
   }
 })
 
-export type ContextTreeInstance = ComponentPublicInstance<{
+export type NodeEditorInstance = ComponentPublicInstance<{
   createUserAssistantPairs: () => void;
 }>
 </script>

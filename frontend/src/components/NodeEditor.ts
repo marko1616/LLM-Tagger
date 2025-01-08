@@ -66,14 +66,14 @@ export class reteEditor {
         const classicPreset = ContextMenuPresets.classic.setup([
           ['User Node', () => this.userNodeFactory()],
           ['Assistant Node', () => this.assistantNodeFactory()],
-          ['Assistant Pairwise Node', () => this.assistantPairwiseNodeFactory()],
+          ['Assistant Pairwise Node', () => this.assistantPairwiseNodeFactory()]
         ])
         const createUserAssistantPairs: ContextMenuItem = {
           label: 'Create User-Assistant Pairs',
           key: 'createUserAssistantPairs',
           handler: (async () => await this.createUserAssistantPairs(area.area.pointer))
         }
-        var defaultMenu = classicPreset(context, plugin)
+        const defaultMenu = classicPreset(context, plugin)
 
         if(context == 'root') {
           defaultMenu.list.push(createUserAssistantPairs)
@@ -138,9 +138,8 @@ export class reteEditor {
     })
 
     // Remove all selected nodes on key delete.
-    window.addEventListener("keydown", (event) => {if(event.key == "Delete") this.area.emit({type: 'keydelete', data: {}})});
+    window.addEventListener('keydown', (event) => {if(event.key == 'Delete') this.area.emit({type: 'keydelete', data: {}})})
     this.area.addPipe(event => {
-      console.log(event)
       if (event.type === 'keydelete') {
         this.editor.getNodes().forEach(node => {
           if(node.selected) {
@@ -185,17 +184,6 @@ export class reteEditor {
     return this.area.nodeViews.get(id)?.position
   }
 
-  emitRenderCallback() {
-    const nodes = this.editor.getNodes()
-    console.log("EMITED")
-    nodes.forEach(node => {
-      this.area.emit({
-        type: 'nodedragged',
-        data: node
-      })
-    })
-  }
-
   async createUserAssistantPairs(position: Position | null = null) {
     const userNode = this.userNodeFactory()
     const assistantNode = this.assistantNodeFactory()
@@ -211,14 +199,14 @@ export class reteEditor {
 
   systemNodeFactory() {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput("System", this.emitRenderCallback.bind(this)))
+    systemNode.addControl('TextInput', new PromptTextInput('System'))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
   userNodeFactory() {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput("User", this.emitRenderCallback.bind(this)))
+    userNode.addControl('TextInput', new PromptTextInput('User'))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
@@ -226,7 +214,7 @@ export class reteEditor {
 
   assistantNodeFactory() {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive", this.emitRenderCallback.bind(this)))
+    assistantNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive'))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
@@ -234,8 +222,8 @@ export class reteEditor {
 
   assistantPairwiseNodeFactory() {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput("Assistant positive", this.emitRenderCallback.bind(this)))
-    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput("Assistant negative", this.emitRenderCallback.bind(this)))
+    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive'))
+    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput('Assistant negative'))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode

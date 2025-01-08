@@ -1,4 +1,4 @@
 {
-  "api_base": "http://127.0.0.1:1080/",
+  "api_base": "http://127.0.0.1:80/api/",
   "api_token": "your-secret-token"
 }

@@ -1,6 +1,6 @@
 {
-  "listen": "127.0.0.1:1080",
-  "api_base": "http://127.0.0.1:1080/",
+  "listen": "0.0.0.0:80",
+  "api_base": "http://127.0.0.1:80/api/",
   "auth_token": "your-secret-token",
   "json_indent": 2
 }

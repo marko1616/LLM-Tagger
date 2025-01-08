@@ -1,0 +1,29 @@
+services:
+  frontend:
+    build: ./frontend
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    networks:
+      - app-network
+    volumes:
+      - ./backend/datasets:/app/datasets
+      - ./backend/uploads:/app/uploads
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "1080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

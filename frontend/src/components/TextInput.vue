@@ -18,7 +18,7 @@
 import { defineComponent, ref, watch } from 'vue'
 import { PromptTextInput } from './TextInput'
 
-import { editingControl, openOuterEditor } from './ContextTreeStore'
+import { editingControl, openOuterEditor } from './NodeEditorStore'
 
 interface Props {
   data: PromptTextInput;
@@ -40,7 +40,7 @@ export default defineComponent({
   },
   mounted() {
     if(this.textareaRef) {
-      this.observer.observe(this.textareaRef);
+      this.observer.observe(this.textareaRef)
     }
   },
   setup(props: Props) {
@@ -52,7 +52,7 @@ export default defineComponent({
     })
     const observer = new ResizeObserver((entries) => {
       props.data.emitRender()
-    });
+    })
     return {
       observer,
       textareaRef
