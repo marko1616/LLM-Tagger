@@ -11,7 +11,7 @@ template_sources = [
 
 template_targets = [
     Path(__file__).parent / "backend" / "config.json"
-    , Path(__file__).parent / "frontend" / "config.json"
+    , Path(__file__).parent / "frontend" / "public" / "config.json"
 ]
 
 def apply_config_template(template_source: Path, template_target: Path, api_base: str, api_token: str):
