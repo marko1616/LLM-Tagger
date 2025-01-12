@@ -15,6 +15,9 @@ export default defineComponent({
   mounted() {
     this.editor = new reteEditor(this.$refs.rete as HTMLElement)
   },
+  beforeUnmount() {
+    this.editor?.destroy()
+  },
   methods: {
     createUserAssistantPairs(): void {
       this.editor?.createUserAssistantPairs()

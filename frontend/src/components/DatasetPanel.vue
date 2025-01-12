@@ -1,23 +1,57 @@
 <template>
   <div class="dataset-panel">
-    <div class="dropdown-container">
-      <div class="dropdown" :class="{ 'dropdown-active': datasetDroppedDown }" @click="() => {datasetDroppedDown = !datasetDroppedDown}">Select Dataset<i class="dropdown-arrow uil uil-arrow-down"></i></div>
-      <div class="dropdown-list-container">
-        <div class="dropdown-list" :class="{ 'dropdown-active': datasetDroppedDown }">
-          <input class="search" placeholder="Search dataset..." />
-          <div class="item" @click="createDataset">Create new</div>
-          <div class="item" v-for="dataset in datasets" :key="dataset">
-            {{ dataset }}
+    <simplebar>
+      <div>
+      <ui class="dataset-list" ref="datasetListRef">
+        <li>Create new dataset</li>
+        <li v-for="dataset in datasets" :key="dataset" @click="(event) => {flipDropdownState(event)}" @click.stop>
+          <div class="dropdown-list" @click.capture.stop>
+            <input class="search" placeholder="Search item..." />
+            <div class="item" @click="createDataset">Create new item</div>
+            <div class="item" v-for="dataset in datasets" :key="dataset">
+              {{ dataset }}
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+          <p>{{ dataset }}</p>
+        </li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+        <li>PAD</li>
+      </ui></div>
+    </simplebar>
   </div>
 </template>
 
 <script lang="ts">
 import axios from 'axios'
 import { defineComponent, ref } from 'vue'
+
+import simplebar from 'simplebar-vue';
+import 'simplebar-vue/dist/simplebar.min.css';
 
 enum Role {
   SYSTEM = 'system',
@@ -51,6 +85,9 @@ type Dataset = {
 }
 
 export default defineComponent({
+  components: {
+    simplebar
+  },
   methods: {
     createDataset() {
       const dataset: Dataset = {
@@ -69,65 +106,103 @@ export default defineComponent({
         this.datasets.length = 0
         this.datasets.push(...response.data.datasets)
       })
+    },
+    flipDropdownState(event: MouseEvent) {
+      const target = event.currentTarget
+      if(target instanceof HTMLElement) {
+        if (target.classList.contains('dropdown-active')) {
+          target.classList.remove('dropdown-active');
+        } else {
+          target.classList.add('dropdown-active');
+        }
+      }
+    },
+    disableDropdownStates() {
+      const dropdowns = this.datasetListRef?.querySelectorAll('.dropdown-active')
+      dropdowns?.forEach((dropdown) => {
+        dropdown.classList.remove('dropdown-active')
+      })
     }
   },
   mounted() {
     this.flushDatasets()
+    document.addEventListener('click', this.disableDropdownStates);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.disableDropdownStates);
   },
   setup() {
+    const datasetListRef = ref<HTMLElement | null>(null)
     const datasetDroppedDown = ref(false)
     const datasets = ref<string[]>([])
-    return { datasetDroppedDown, datasets }
-  }
+    return { datasetListRef, datasetDroppedDown, datasets }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
 @import "@/styles/color.scss";
 
-.dropdown-container {
+.dataset-panel {
+  display: flex;
+  width: 100%;
+  max-height: 100%;
+
+  border: 0.2em solid $container-border-color;
+  border-radius: 1em;
+}
+
+.dataset-list {
   display: flex;
   flex-direction: column;
-  margin: 10px;
-}
+  width: 100%;
+  height: 100%;
 
-.dropdown {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  background: $dropdown-btn-bg-color;
-  color: $dropdown-btn-color;
-  border-radius: 10px;
+  & li {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    list-style-type: none;
+    color: $content-color;
+    font-size: 1.25em;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    border-radius: 0.25em;
+    margin: 0.5em 0.5em 0.5em 0.5em;
 
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
-  padding-top: 0.5vh;
-  padding-bottom: 0.5vh;
+    transition: all 0.3s ease;
 
-  &.dropdown-active {
-    & .dropdown-arrow {
-      display: flex;
-      font-size: 24px;
-      margin-left: 10px;
-      transform: rotate(180deg);
-      transition: transform 0.3s ease;
+    &:hover {
+      color: $content-color-dark;
+      background: $dropdown-btn-bg-color;
+    }
+
+    & .item-padding {
+      flex-grow: 10;
+    }
+
+    & p {
+      max-height: 1em;
+      margin: 0em;
+    }
+
+    &.dropdown-active {
+      & .dropdown-list {
+        pointer-events: all;
+        opacity: 1;
+        transform: translateY(2em);
+      }
+    }
+
+    &:not(.dropdown-active) {
+      & .dropdown-list {
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(10em);
+      }
     }
   }
-
-  &:not(.dropdown-active) {
-    & .dropdown-arrow {
-      display: flex;
-      font-size: 24px;
-      margin-left: 10px;
-      transition: transform 0.3s ease;
-    }
-  }
-}
-
-.dropdown-list-container {
-  margin: 0;
 }
 
 .dropdown-list {
@@ -140,18 +215,8 @@ export default defineComponent({
 
   margin-top: 10px;
   background-color: $dropdown-list-bg-color;
-
-  opacity: 0;
-  transform: translateY(5vh);
   transition: all 0.3s ease;
-
   font-size: large;
-
-  &.dropdown-active {
-    pointer-events: all;
-    opacity: 1;
-    transform: translateY(0);
-  }
 
   & .search {
     display: flex;
@@ -180,7 +245,7 @@ export default defineComponent({
     width: 90%;
     box-sizing: border-box;
 
-    border-radius: 2.5px;
+    border-radius: 0.25em;
     color: $dropdown-list-item-color;
     background-color: $dropdown-list-bg-color;
 
@@ -191,5 +256,9 @@ export default defineComponent({
       color: $dropdown-list-item-hover-color;
     }
   }
+}
+
+[data-simplebar] {
+  width: 100%;
 }
 </style>

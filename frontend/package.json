@@ -20,6 +20,7 @@
     "rete-vue-plugin": "^2.1.1",
     "sass": "^1.83.0",
     "sass-loader": "^16.0.4",
+    "simplebar-vue": "^2.4.0",
     "styled-components": "^6.1.13",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0"

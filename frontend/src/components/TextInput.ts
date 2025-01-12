@@ -4,12 +4,11 @@ import {ClassicPreset} from 'rete'
 class PromptTextInput extends ClassicPreset.Control {
   value = ref('')
   title = ref('')
-  emitRenderCallback?: () => void
+  size: DOMRectReadOnly | null = null
 
-  constructor(title: string, emitRenderCallback?: () => void) {
+  constructor(title: string) {
     super()
     this.title.value = title
-    this.emitRenderCallback = emitRenderCallback
   }
 
   update(data: string) {
@@ -21,8 +20,8 @@ class PromptTextInput extends ClassicPreset.Control {
     this.value.value = target.value
   }
 
-  emitRender() {
-    this.emitRenderCallback?.()
+  saveSize(size: DOMRectReadOnly) {
+    this.size = size
   }
 }
 

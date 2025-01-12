@@ -53,6 +53,8 @@ export class reteEditor {
   public readonly render: VuePlugin<Schemes, AreaExtra>
   public readonly contextMenu: ContextMenuPlugin<Schemes>
   public readonly rootNode: ClassicPreset.Node<any>
+  public readonly handleKeyDown: (event: KeyboardEvent) => void
+  public readonly handleMouseUp: () => void
 
   constructor(container: HTMLElement) {
     this.socket = new ClassicPreset.Socket('socket')
@@ -138,7 +140,8 @@ export class reteEditor {
     })
 
     // Remove all selected nodes on key delete.
-    window.addEventListener('keydown', (event) => {if(event.key == 'Delete') this.area.emit({type: 'keydelete', data: {}})})
+    this.handleKeyDown = (event: KeyboardEvent) => {if(event.key == 'Delete') this.area.emit({type: 'keydelete', data: {}})}
+    window.addEventListener('keydown', this.handleKeyDown)
     this.area.addPipe(event => {
       if (event.type === 'keydelete') {
         this.editor.getNodes().forEach(node => {
@@ -158,9 +161,15 @@ export class reteEditor {
       }
       return event
     })
+
+    // Ensure that when mouse up can update any node size change.
+    this.handleMouseUp = () => {this.editor.getNodes().forEach(node => {this.area.update('node', node.id)})}
+    window.addEventListener('mouseup', this.handleMouseUp)
   }
 
   destroy() {
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('mouseup', this.handleMouseUp)
     this.area.destroy()
   }
 

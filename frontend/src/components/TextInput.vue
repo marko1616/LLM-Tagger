@@ -40,6 +40,10 @@ export default defineComponent({
   },
   mounted() {
     if(this.textareaRef) {
+      if(this.data.size) {
+        this.textareaRef.style.height = `${this.data.size.height}px`
+        this.textareaRef.style.width = `${this.data.size.width}px`
+      }
       this.observer.observe(this.textareaRef)
     }
   },
@@ -51,7 +55,8 @@ export default defineComponent({
       }
     })
     const observer = new ResizeObserver((entries) => {
-      props.data.emitRender()
+      const textAreaSize = entries[0].contentRect
+      props.data.saveSize(textAreaSize)
     })
     return {
       observer,

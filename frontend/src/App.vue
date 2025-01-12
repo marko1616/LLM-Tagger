@@ -143,11 +143,13 @@ body {
   padding: 16px;
   padding-left: 1vw;
   padding-right: 1vw;
+
+  max-height: 100%;
 }
 
 .sidebar-main-panel {
   display: flex;
-  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar-buttom-panel {
