@@ -58,10 +58,10 @@ export default defineComponent({
       callback(res.map((item) => item.data.url))
     }
 
-    watch(() => props.editingText, (newValue: string, oldValue: string) => {
+    watch(() => props.editingText, (newValue: string) => {
       text.value = newValue
     })
-    watch(text, (newValue: string, oldValue: string) => {
+    watch(text, () => {
       emit('updateText', text.value)
     })
     return {

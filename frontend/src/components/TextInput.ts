@@ -2,26 +2,23 @@ import {ref} from 'vue'
 import {ClassicPreset} from 'rete'
 
 class PromptTextInput extends ClassicPreset.Control {
-  value = ref('')
   title = ref('')
+  data = ref('')
   size: DOMRectReadOnly | null = null
 
-  constructor(title: string) {
+  constructor(title: string, private resizeCallback?: () => void) {
     super()
     this.title.value = title
   }
 
-  update(data: string) {
-    this.value.value = data
-  }
-
   onInput(event: Event) {
     const target = event.target as HTMLTextAreaElement
-    this.value.value = target.value
+    this.data.value = target.value
   }
 
-  saveSize(size: DOMRectReadOnly) {
-    this.size = size
+  saveSize(textareaSize: DOMRectReadOnly) {
+    this.resizeCallback?.()
+    this.size = textareaSize
   }
 }
 

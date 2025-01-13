@@ -34,7 +34,7 @@ class NodeItem(BaseModel):
     negative: Optional[str]
 
 class DatasetItem(BaseModel):
-    name: Optional[str]
+    name: str
     nodeItems: list[NodeItem]
 
 class Dataset(BaseModel):
@@ -173,6 +173,21 @@ async def delete_dataset(name: str) -> JSONResponse:
 
     dataset_dir.unlink()
     return JSONResponse(content={"message":"Dataset successfully deleted."}, status_code=200)
+
+@app.get("/api/datasets/{name}/list", dependencies=[Depends(verify_auth_token)])
+async def list_dataset_items(name: str) -> JSONResponse:
+    """
+    Lists all available dataset items.
+    """
+    dataset_dir = Path("./datasets") / f"{name}.json"
+
+    if not dataset_dir.exists():
+        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+
+    with open(dataset_dir, "r")as f:
+        data = json.load(f)
+
+    return JSONResponse([item["name"] for item in data["items"]])
 
 @app.get("/api/datasets/{dataset_name}/{item_name}", dependencies=[Depends(verify_auth_token)])
 async def get_dataset(dataset_name: str, item_name: str) -> JSONResponse:

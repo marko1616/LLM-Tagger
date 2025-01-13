@@ -8,10 +8,6 @@
       <div class="sidebar-main-panel">
         <DatasetPanel/>
       </div>
-      <div class="sidebar-buttom-panel">
-        <button>提交</button>
-        <button @click="createUserAssistantPairs">添加节点</button>
-      </div>
       <footer>
         <p>
           &copy; 2024 <a href="https://github.com/marko1616/LLM-Tagger" target="_blank">LLM-Tagger</a>.
@@ -150,6 +146,8 @@ body {
 .sidebar-main-panel {
   display: flex;
   overflow: hidden;
+
+  flex-grow: 1;
 }
 
 .sidebar-buttom-panel {

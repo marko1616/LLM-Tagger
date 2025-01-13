@@ -30,7 +30,7 @@ type Schemes = GetSchemes<
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
 >
 
-type KeyDeleteSignal = {type: 'keydelete', data: {}}
+type KeyDeleteSignal = {type: 'keydelete', data: null}
 
 type AreaExtra = VueArea2D<Schemes> | ContextMenuExtra | KeyDeleteSignal
 
@@ -52,9 +52,9 @@ export class reteEditor {
   public readonly connection: ConnectionPlugin<Schemes, AreaExtra>
   public readonly render: VuePlugin<Schemes, AreaExtra>
   public readonly contextMenu: ContextMenuPlugin<Schemes>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public readonly rootNode: ClassicPreset.Node<any>
   public readonly handleKeyDown: (event: KeyboardEvent) => void
-  public readonly handleMouseUp: () => void
 
   constructor(container: HTMLElement) {
     this.socket = new ClassicPreset.Socket('socket')
@@ -64,6 +64,7 @@ export class reteEditor {
     this.render = new VuePlugin<Schemes, AreaExtra>()
     this.contextMenu = new ContextMenuPlugin<Schemes>({
       items: (context, plugin) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const area = plugin.parentScope<BaseAreaPlugin<Schemes, any>>(BaseAreaPlugin)
         const classicPreset = ContextMenuPresets.classic.setup([
           ['User Node', () => this.userNodeFactory()],
@@ -105,10 +106,10 @@ export class reteEditor {
               return TextInputControl
             }
           },
-          socket(context) {
+          socket(_context) {
             return Socket
           },
-          connection(context) {
+          connection(_context) {
             return Connection
           }
         }
@@ -139,10 +140,10 @@ export class reteEditor {
       return event
     })
 
-    // Remove all selected nodes on key delete.
-    this.handleKeyDown = (event: KeyboardEvent) => {if(event.key == 'Delete') this.area.emit({type: 'keydelete', data: {}})}
+    this.handleKeyDown = (event: KeyboardEvent) => {if(event.key == 'Delete') this.area.emit({type: 'keydelete', data: null})}
     window.addEventListener('keydown', this.handleKeyDown)
     this.area.addPipe(event => {
+      // Remove all selected nodes on key delete.
       if (event.type === 'keydelete') {
         this.editor.getNodes().forEach(node => {
           if(node.selected) {
@@ -161,15 +162,23 @@ export class reteEditor {
       }
       return event
     })
+  }
 
-    // Ensure that when mouse up can update any node size change.
-    this.handleMouseUp = () => {this.editor.getNodes().forEach(node => {this.area.update('node', node.id)})}
-    window.addEventListener('mouseup', this.handleMouseUp)
+  gettextareaResizeCallback(id: string) {
+    // Little hack here because size will be reclac in retejs/render-utils
+    return () => this.area.emit({
+      type: 'noderesized',
+      data: {
+        id: id,
+        size: {
+          width: 0,
+          height: 0,
+        }
+      }
+    })
   }
 
   destroy() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('mouseup', this.handleMouseUp)
     this.area.destroy()
   }
 
@@ -208,14 +217,14 @@ export class reteEditor {
 
   systemNodeFactory() {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput('System'))
+    systemNode.addControl('TextInput', new PromptTextInput('System', this.gettextareaResizeCallback(systemNode.id)))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
   userNodeFactory() {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput('User'))
+    userNode.addControl('TextInput', new PromptTextInput('User', this.gettextareaResizeCallback(userNode.id)))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
@@ -223,7 +232,7 @@ export class reteEditor {
 
   assistantNodeFactory() {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive'))
+    assistantNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive', this.gettextareaResizeCallback(assistantNode.id)))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
@@ -231,8 +240,8 @@ export class reteEditor {
 
   assistantPairwiseNodeFactory() {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive'))
-    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput('Assistant negative'))
+    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive', this.gettextareaResizeCallback(assistantPairwiseNode.id)))
+    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput('Assistant negative', this.gettextareaResizeCallback(assistantPairwiseNode.id)))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode

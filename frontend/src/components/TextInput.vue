@@ -1,13 +1,13 @@
 <template>
   <div class="data-input-container">
     <div class="title-container">
+        <!-- Need to be pointerdown event here otherwist the component will not be selected -->
         <div class="title" data-testid="title" @click="doEditingNode" @pointerdown.stop="">{{ data.title.value }}</div>
         <div class="title-padding"></div>
       </div>
     <textarea
       class="data-input"
       ref="textareaRef"
-      v-model="data.value.value"
       @pointerdown.stop=""
       @input="data.onInput"
     ></textarea>
@@ -34,11 +34,12 @@ export default defineComponent({
   methods: {
     doEditingNode() {
       editingControl.controlId = this.data.id
-      editingControl.data = this.data.value.value
+      editingControl.data = (this.textareaRef as HTMLTextAreaElement).value
       openOuterEditor.value()
     }
   },
   mounted() {
+    (this.textareaRef as HTMLTextAreaElement).value = this.$props.data.data.value
     if(this.textareaRef) {
       if(this.data.size) {
         this.textareaRef.style.height = `${this.data.size.height}px`
@@ -47,11 +48,14 @@ export default defineComponent({
       this.observer.observe(this.textareaRef)
     }
   },
+  unmounted() {
+    this.observer.disconnect()
+  },
   setup(props: Props) {
     const textareaRef = ref<HTMLTextAreaElement | null>(null)
-    watch(editingControl, (newValue, oldValue) => {
+    watch(editingControl, (newValue) => {
       if(editingControl.controlId == props.data.id) {
-        props.data.value.value = newValue.data
+        (textareaRef.value as HTMLTextAreaElement).value = newValue.data
       }
     })
     const observer = new ResizeObserver((entries) => {

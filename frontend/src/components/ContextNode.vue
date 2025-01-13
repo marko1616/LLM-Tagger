@@ -105,12 +105,14 @@ interface InputData {
   label: string;
   control?: ControlData;
   showControl?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   socket: any;
   index?: number;
 }
 
 interface OutputData {
   label: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   socket: any;
   index?: number;
 }
@@ -119,13 +121,6 @@ interface ControlData {
   update: (data: string) => void;
 }
 
-/**
- * Sorts an array of entries by the `index` property of the value.
- *
- * @template T - The value type in the entries
- * @param {[string, T & {index?: number}][]} entries - The array of entries to sort
- * @returns {[string, T][]} The sorted array of entries
- */
 function sortByIndex<T>(
     entries: [string, T & { index?: number }][]
 ): [string, T][] {
@@ -142,6 +137,7 @@ export default defineComponent({
       type: Object as PropType<NodeData>,
       required: true
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     emit: Function as PropType<(event: string, payload: any) => void>,
     seed: Number
   },
