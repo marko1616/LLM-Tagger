@@ -18,7 +18,10 @@ RUN if [ "${USE_MIRROR}" = "true" ]; then \
     fi
 
 # Build the application
-COPY ./src ./src
+COPY ./src ./
+COPY ./babel.config.js ./
+COPY ./tsconfig.json ./
+COPY ./vue.config.js ./
 RUN npm run build
 
 # Production Stage

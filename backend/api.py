@@ -11,11 +11,13 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+
 class Config(BaseModel):
     listen: str
     api_base: str
     auth_token: str
     json_indent: int
+
 
 class Role(str, Enum):
     SYSTEM = "system"
@@ -23,9 +25,11 @@ class Role(str, Enum):
     ASSISTANT = "assistant"
     TOOL = "tool"
 
+
 class NodePosition(BaseModel):
     x: float
     y: float
+
 
 class NodeItem(BaseModel):
     role: Role
@@ -33,15 +37,18 @@ class NodeItem(BaseModel):
     positive: str
     negative: Optional[str]
 
+
 class DatasetItem(BaseModel):
     name: str
     nodeItems: list[NodeItem]
+
 
 class Dataset(BaseModel):
     name: str
     timestamp: int
     override: bool
     items: list[DatasetItem]
+
 
 def load_config() -> None:
     """
@@ -55,6 +62,7 @@ def load_config() -> None:
     except Exception as e:
         raise RuntimeError(f"Error loading config: {e}")
 
+
 config = load_config()
 app = FastAPI()
 
@@ -62,8 +70,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"]
+    allow_headers=["Content-Type", "Authorization"],
 )
+
 
 def verify_auth_token(authorization: str = Header(None)) -> str:
     """
@@ -75,11 +84,13 @@ def verify_auth_token(authorization: str = Header(None)) -> str:
         raise HTTPException(status_code=401, detail="Invalid token")
     return authorization
 
+
 UPLOAD_DIR = Path("./uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 DATASET_DIR = Path("./datasets")
 DATASET_DIR.mkdir(exist_ok=True)
+
 
 @app.post("/api/img/uploads", dependencies=[Depends(verify_auth_token)])
 async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
@@ -87,7 +98,9 @@ async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     Handles uploading of image files.
     """
     if file.content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Only JPEG and PNG images are allowed.")
+        raise HTTPException(
+            status_code=400, detail="Only JPEG and PNG images are allowed."
+        )
 
     file_path = UPLOAD_DIR / file.filename
     if file_path.exists():
@@ -104,10 +117,11 @@ async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     return JSONResponse(
         content={
             "message": "File uploaded successfully.",
-            "url": f"{config.api_base[:-1] if config.api_base.endswith('/') else config.api_base}/api/uploads/{file.filename}"
+            "url": f"{config.api_base[:-1] if config.api_base.endswith('/') else config.api_base}/api/uploads/{file.filename}",
         },
-        status_code=200
+        status_code=200,
     )
+
 
 @app.get("/api/uploads/{filename}")
 async def get_uploaded_file(filename: str) -> FileResponse:
@@ -124,6 +138,7 @@ async def get_uploaded_file(filename: str) -> FileResponse:
 
     return FileResponse(file_path)
 
+
 @app.get("/api/datasets/list", dependencies=[Depends(verify_auth_token)])
 async def list_datasets() -> JSONResponse:
     """
@@ -132,21 +147,25 @@ async def list_datasets() -> JSONResponse:
     datasets = [f.stem for f in DATASET_DIR.glob("*.json")]
     return JSONResponse(content={"datasets": datasets}, status_code=200)
 
+
 @app.post("/api/datasets/create", dependencies=[Depends(verify_auth_token)])
 async def create_dataset(dataset: Dataset) -> JSONResponse:
     """
     Creates a new dataset.
     """
     dataset_dir = Path("./datasets") / f"{dataset.name}.json"
-    
+
     # Validate timestamp
     if not 0 <= dataset.timestamp <= (2**64 - 1):
-        return JSONResponse(content={"message":"Invalid timestamp."}, status_code=400)
+        return JSONResponse(content={"message": "Invalid timestamp."}, status_code=400)
 
     with open(dataset_dir, "w") as f:
         f.write(dataset.model_dump_json(indent=config.json_indent))
 
-    return JSONResponse(content={"message":"Dataset successfully updated."}, status_code=200)
+    return JSONResponse(
+        content={"message": "Dataset successfully updated."}, status_code=200
+    )
+
 
 @app.get("/api/datasets/{name}", dependencies=[Depends(verify_auth_token)])
 async def get_dataset(name: str) -> JSONResponse:
@@ -156,10 +175,13 @@ async def get_dataset(name: str) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
 
     with open(dataset_dir, "r") as f:
         return JSONResponse(content=json.load(f), status_code=200)
+
 
 @app.delete("/api/datasets/{name}", dependencies=[Depends(verify_auth_token)])
 async def delete_dataset(name: str) -> JSONResponse:
@@ -169,10 +191,15 @@ async def delete_dataset(name: str) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
 
     dataset_dir.unlink()
-    return JSONResponse(content={"message":"Dataset successfully deleted."}, status_code=200)
+    return JSONResponse(
+        content={"message": "Dataset successfully deleted."}, status_code=200
+    )
+
 
 @app.get("/api/datasets/{name}/list", dependencies=[Depends(verify_auth_token)])
 async def list_dataset_items(name: str) -> JSONResponse:
@@ -182,45 +209,61 @@ async def list_dataset_items(name: str) -> JSONResponse:
     dataset_dir = Path("./datasets") / f"{name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
 
-    with open(dataset_dir, "r")as f:
+    with open(dataset_dir, "r") as f:
         data = json.load(f)
 
     return JSONResponse([item["name"] for item in data["items"]])
 
-@app.get("/api/datasets/{dataset_name}/{item_name}", dependencies=[Depends(verify_auth_token)])
-async def get_dataset(dataset_name: str, item_name: str) -> JSONResponse:
+
+@app.get(
+    "/api/datasets/{dataset_name}/{item_name}",
+    dependencies=[Depends(verify_auth_token)],
+)
+async def get_dataset_item(dataset_name: str, item_name: str) -> JSONResponse:
     """
     Retrieves a dataset item.
     """
     dataset_dir = Path("./datasets") / f"{dataset_name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
 
     with open(dataset_dir, "r") as f:
         data = json.load(f)
-    
+
     for item in data["items"]:
         if item["name"] == item_name:
             return JSONResponse(content=item, status_code=200)
-    
-    return JSONResponse(content={"message":"Item does not exist."}, status_code=404)
 
-@app.post("/api/datasets/{dataset_name}/{item_name}", dependencies=[Depends(verify_auth_token)])
-async def update_dataset(dataset_name: str, item_name: str, item: DatasetItem) -> JSONResponse:
+    return JSONResponse(content={"message": "Item does not exist."}, status_code=404)
+
+
+@app.post(
+    "/api/datasets/{dataset_name}/{item_name}",
+    dependencies=[Depends(verify_auth_token)],
+)
+async def update_dataset_item(
+    dataset_name: str, item_name: str, item: DatasetItem
+) -> JSONResponse:
     """
     Creates a dataset item.
     """
     dataset_dir = Path("./datasets") / f"{dataset_name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
-    
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
+
     with open(dataset_dir, "r") as f:
         data = json.load(f)
-    
+
     for i, item_ in enumerate(data["items"]):
         if item_["name"] == item_name:
             data["items"][i] = item.model_dump()
@@ -232,34 +275,53 @@ async def update_dataset(dataset_name: str, item_name: str, item: DatasetItem) -
     with open(dataset_dir, "w") as f:
         f.write(json.dumps(data, indent=config.json_indent))
 
-    return JSONResponse(content={"message":"Item successfully updated."}, status_code=200)
+    return JSONResponse(
+        content={"message": "Item successfully updated."}, status_code=200
+    )
 
-@app.delete("/api/datasets/{dataset_name}/{item_name}", dependencies=[Depends(verify_auth_token)])
-async def delete_dataset(dataset_name: str, item_name: str) -> JSONResponse:
+
+@app.delete(
+    "/api/datasets/{dataset_name}/{item_name}",
+    dependencies=[Depends(verify_auth_token)],
+)
+async def delete_dataset_item(dataset_name: str, item_name: str) -> JSONResponse:
     """
     Deletes a dataset item.
     """
     dataset_dir = Path("./datasets") / f"{dataset_name}.json"
 
     if not dataset_dir.exists():
-        return JSONResponse(content={"message":"Dataset does not exist."}, status_code=404)
-    
+        return JSONResponse(
+            content={"message": "Dataset does not exist."}, status_code=404
+        )
+
     with open(dataset_dir, "r") as f:
         data = json.load(f)
-    
+
     for i, item in enumerate(data["items"]):
         if item["name"] == item_name:
             del data["items"][i]
             break
     else:
-        return JSONResponse(content={"message":"Item does not exist."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Item does not exist."}, status_code=404
+        )
     data["timestamp"] = int(time.time())
 
     with open(dataset_dir, "w") as f:
         f.write(json.dumps(data, indent=config.json_indent))
 
-    return JSONResponse(content={"message":"Item successfully deleted."}, status_code=200)
+    return JSONResponse(
+        content={"message": "Item successfully deleted."}, status_code=200
+    )
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api:app", host=config.listen.split(":")[0], port=int(config.listen.split(":")[1]), reload=True)
+
+    uvicorn.run(
+        "api:app",
+        host=config.listen.split(":")[0],
+        port=int(config.listen.split(":")[1]),
+        reload=True,
+    )
