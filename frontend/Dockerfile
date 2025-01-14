@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:20-bookworm AS build-stage
+FROM node:20-alpine AS build-stage
 WORKDIR /app
 
 # Proxy
@@ -9,13 +9,17 @@ ENV HTTPS_PROXY=${PROXY}
 ENV ALL_PROXY=${PROXY}
 
 # Install dependencies
-COPY package.json yarn.lock ./
-COPY package*.json ./
-RUN yarn install
+ARG USE_MIRROR=false
+COPY package.json package-lock.json ./
+RUN if [ "${USE_MIRROR}" = "true" ]; then \
+        npm --loglevel info --registry https://npmreg.proxy.ustclug.org/ install; \
+    else \
+        npm --loglevel info install; \
+    fi
 
 # Build the application
 COPY ./src ./src
-RUN yarn build
+RUN npm run build
 
 # Production Stage
 FROM nginx:stable-alpine AS production-stage

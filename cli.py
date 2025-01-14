@@ -24,7 +24,8 @@ def apply_config_template(template_source: Path, template_target: Path, api_base
 
 def setup():
     print("Setting up project...")
-    url_base = input("Enter the urlbase for the project(eg. http://localhost:8000):")
+    print("Notice the default port is `1080` in docker-compose network mapping.")
+    url_base = input("Enter the urlbase for the project(eg. http://localhost:1080):")
     url_base = url_base if url_base.endswith("/") else url_base + "/"
     api_base = url_base + "api/"
     api_token = getpass("Enter the API token for the project:")

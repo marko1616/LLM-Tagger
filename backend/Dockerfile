@@ -10,7 +10,6 @@ ENV ALL_PROXY=${PROXY}
 ARG USE_MIRROR=false
 COPY ./requirements.txt ./
 RUN if [ "${USE_MIRROR}" = "true" ]; then \
-        echo "Using PyPI mirror: https://mirrors.ustc.edu.cn/pypi/simple" && \
         pip install --no-cache-dir -r requirements.txt -i https://mirrors.ustc.edu.cn/pypi/simple; \
     else \
         pip install --no-cache-dir -r requirements.txt; \
