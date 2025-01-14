@@ -17,7 +17,7 @@ template_targets = [
 def apply_config_template(template_source: Path, template_target: Path, api_base: str, api_token: str):
     with open(template_source, "r") as template_file:
         print(f"Applying template {template_source} to {template_target}")
-        template = Template(template_file.read()).substitute(api_base=api_base, api_token=api_token)
+        template = Template(template_file.read()).safe_substitute(api_base=api_base, api_token=api_token)
     
     with open(template_target, "w") as target_file:
         target_file.write(template)

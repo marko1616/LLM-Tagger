@@ -13,7 +13,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 svg {
   overflow: visible !important;

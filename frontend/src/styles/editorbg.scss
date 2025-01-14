@@ -1,4 +1,4 @@
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 .fill-area {
   display: table;
@@ -13,10 +13,10 @@
 .background {
   background-color: $main-bg-color;
   opacity: 1;
-  background-image: linear-gradient($main-bg-select-color 1.6px, transparent 1.6px),
-    linear-gradient(90deg, $main-bg-select-color 1.6px, transparent 1.6px),
-    linear-gradient($main-bg-select-color 0.8px, transparent 0.8px),
-    linear-gradient(90deg, $main-bg-select-color 0.8px, $main-bg-color 0.8px);
+  background-image: linear-gradient($main-bg-grid-color 1.6px, transparent 1.6px),
+    linear-gradient(90deg, $main-bg-grid-color 1.6px, transparent 1.6px),
+    linear-gradient($main-bg-grid-color 0.8px, transparent 0.8px),
+    linear-gradient(90deg, $main-bg-grid-color 0.8px, $main-bg-color 0.8px);
   background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
   background-position: -1.6px -1.6px, -1.6px -1.6px, -0.8px -0.8px,
     -0.8px -0.8px;

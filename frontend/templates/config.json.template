@@ -1,4 +1,3 @@
 {
-  "api_base": "$api_base",
-  "api_token": "$api_token"
+  "api_base": "$api_base"
 }

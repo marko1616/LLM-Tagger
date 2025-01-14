@@ -71,7 +71,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 .data-input-container {
   & .title {

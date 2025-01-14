@@ -31,7 +31,7 @@ export type NodeEditorInstance = ComponentPublicInstance<{
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 .rete {
   display: flex;
@@ -42,7 +42,7 @@ export type NodeEditorInstance = ComponentPublicInstance<{
 </style>
 
 <style lang="scss">
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 [rete-context-menu] {
   min-width: max-content;

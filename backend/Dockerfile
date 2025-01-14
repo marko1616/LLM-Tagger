@@ -1,9 +1,20 @@
 FROM python:3.13-slim AS builder
 WORKDIR /app
 
+# Proxy
+ARG PROXY=""
+ENV HTTP_PROXY=${PROXY}
+ENV HTTPS_PROXY=${PROXY}
+ENV ALL_PROXY=${PROXY}
+
+ARG USE_MIRROR=false
 COPY ./requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt || \
-    (pip install --no-cache-dir -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple)
+RUN if [ "${USE_MIRROR}" = "true" ]; then \
+        echo "Using PyPI mirror: https://mirrors.ustc.edu.cn/pypi/simple" && \
+        pip install --no-cache-dir -r requirements.txt -i https://mirrors.ustc.edu.cn/pypi/simple; \
+    else \
+        pip install --no-cache-dir -r requirements.txt; \
+    fi
 
 COPY ./api.py ./
 COPY ./config.json ./

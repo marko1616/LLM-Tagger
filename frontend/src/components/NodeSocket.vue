@@ -9,7 +9,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 .socket {
     display: inline-block;

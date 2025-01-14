@@ -1,7 +1,7 @@
 <template>
   <div class="dataset-panel">
     <simplebar>
-      <div><ui class="dataset-list" ref="datasetListRef">
+      <ul class="dataset-list" ref="datasetListRef">
         <input @input="(_event) => {flushDatasets(true)}" v-model="datasetFilterText" class="search" placeholder="Search item..." />
         <li class="create">Create new dataset</li>
         <li v-for="dataset in filteredDatasets" :key="dataset.name" @click="(event) => {flipDropdownState(event)}" @click.stop>
@@ -14,7 +14,7 @@
           </div>
           <p>{{ dataset.name }}</p>
         </li>
-      </ui></div>
+      </ul>
     </simplebar>
   </div>
 </template>
@@ -79,7 +79,7 @@ export default defineComponent({
         items: []
       }
 
-      axios.post('/api/datasets/create', dataset).then((_response) => {
+      axios.post('/datasets/create', dataset).then((_response) => {
         this.flushDatasets()
       })
     },
@@ -95,12 +95,12 @@ export default defineComponent({
       }
 
       try {
-        const response = await axios.get('/api/datasets/list')
+        const response = await axios.get('/datasets/list')
         this.datasetsCache.length = 0
         this.filteredDatasets.length = 0
 
         const datasetPromises = response.data.datasets.map(async (datasetName: string) => {
-          const datasetResponse = await axios.get(`/api/datasets/${datasetName}/list`)
+          const datasetResponse = await axios.get(`/datasets/${datasetName}/list`)
           return {
             name: datasetName,
             items: datasetResponse.data
@@ -155,7 +155,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/color.scss";
+@use "@/styles/color.scss" as *;
 
 .dataset-panel {
   display: flex;
@@ -171,6 +171,7 @@ export default defineComponent({
   flex-direction: column;
   width: 100%;
   height: 100%;
+  padding: 0;
 
   & > .search {
     display: flex;
