@@ -36,6 +36,7 @@ class NodeItem(BaseModel):
     nodePosition: NodePosition
     positive: str
     negative: Optional[str]
+    to: list[int]
 
 
 class DatasetItem(BaseModel):
@@ -92,7 +93,7 @@ DATASET_DIR = Path("./datasets")
 DATASET_DIR.mkdir(exist_ok=True)
 
 
-@app.post("/api/img/uploads", dependencies=[Depends(verify_auth_token)])
+@app.post("/img/uploads", dependencies=[Depends(verify_auth_token)])
 async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     """
     Handles uploading of image files.
@@ -117,13 +118,13 @@ async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     return JSONResponse(
         content={
             "message": "File uploaded successfully.",
-            "url": f"{config.api_base[:-1] if config.api_base.endswith('/') else config.api_base}/api/uploads/{file.filename}",
+            "url": f"{config.api_base[:-1] if config.api_base.endswith('/') else config.api_base}/uploads/{file.filename}",
         },
         status_code=200,
     )
 
 
-@app.get("/api/uploads/{filename}")
+@app.get("/uploads/{filename}")
 async def get_uploaded_file(filename: str) -> FileResponse:
     """
     Serves the uploaded file.
@@ -139,7 +140,7 @@ async def get_uploaded_file(filename: str) -> FileResponse:
     return FileResponse(file_path)
 
 
-@app.get("/api/datasets/list", dependencies=[Depends(verify_auth_token)])
+@app.get("/datasets/list", dependencies=[Depends(verify_auth_token)])
 async def list_datasets() -> JSONResponse:
     """
     Lists all available datasets.
@@ -148,16 +149,17 @@ async def list_datasets() -> JSONResponse:
     return JSONResponse(content={"datasets": datasets}, status_code=200)
 
 
-@app.post("/api/datasets/create", dependencies=[Depends(verify_auth_token)])
+@app.post("/datasets/create", dependencies=[Depends(verify_auth_token)])
 async def create_dataset(dataset: Dataset) -> JSONResponse:
     """
     Creates a new dataset.
     """
     dataset_dir = Path("./datasets") / f"{dataset.name}.json"
 
-    # Validate timestamp
-    if not 0 <= dataset.timestamp <= (2**64 - 1):
-        return JSONResponse(content={"message": "Invalid timestamp."}, status_code=400)
+    if os.path.exists(dataset_dir):
+        return JSONResponse(
+            content={"message": "Dataset already exists."}, status_code=400
+        )
 
     with open(dataset_dir, "w") as f:
         f.write(dataset.model_dump_json(indent=config.json_indent))
@@ -167,7 +169,7 @@ async def create_dataset(dataset: Dataset) -> JSONResponse:
     )
 
 
-@app.get("/api/datasets/{name}", dependencies=[Depends(verify_auth_token)])
+@app.get("/datasets/{name}", dependencies=[Depends(verify_auth_token)])
 async def get_dataset(name: str) -> JSONResponse:
     """
     Retrieves a dataset.
@@ -183,7 +185,7 @@ async def get_dataset(name: str) -> JSONResponse:
         return JSONResponse(content=json.load(f), status_code=200)
 
 
-@app.delete("/api/datasets/{name}", dependencies=[Depends(verify_auth_token)])
+@app.delete("/datasets/{name}", dependencies=[Depends(verify_auth_token)])
 async def delete_dataset(name: str) -> JSONResponse:
     """
     Deletes an existing dataset.
@@ -201,7 +203,7 @@ async def delete_dataset(name: str) -> JSONResponse:
     )
 
 
-@app.get("/api/datasets/{name}/list", dependencies=[Depends(verify_auth_token)])
+@app.get("/datasets/{name}/list", dependencies=[Depends(verify_auth_token)])
 async def list_dataset_items(name: str) -> JSONResponse:
     """
     Lists all available dataset items.
@@ -220,7 +222,7 @@ async def list_dataset_items(name: str) -> JSONResponse:
 
 
 @app.get(
-    "/api/datasets/{dataset_name}/{item_name}",
+    "/datasets/{dataset_name}/{item_name}",
     dependencies=[Depends(verify_auth_token)],
 )
 async def get_dataset_item(dataset_name: str, item_name: str) -> JSONResponse:
@@ -245,11 +247,11 @@ async def get_dataset_item(dataset_name: str, item_name: str) -> JSONResponse:
 
 
 @app.post(
-    "/api/datasets/{dataset_name}/{item_name}",
+    "/datasets/{dataset_name}/create",
     dependencies=[Depends(verify_auth_token)],
 )
 async def update_dataset_item(
-    dataset_name: str, item_name: str, item: DatasetItem
+    dataset_name: str, item: DatasetItem
 ) -> JSONResponse:
     """
     Creates a dataset item.
@@ -264,10 +266,11 @@ async def update_dataset_item(
     with open(dataset_dir, "r") as f:
         data = json.load(f)
 
-    for i, item_ in enumerate(data["items"]):
-        if item_["name"] == item_name:
-            data["items"][i] = item.model_dump()
-            break
+    for item in data["items"]:
+        if item["name"] == item.name:
+            return JSONResponse(
+                content={"message": "Item already exists."}, status_code=400
+            )
     else:
         data["items"].append(item.model_dump())
     data["timestamp"] = int(time.time())
@@ -281,7 +284,7 @@ async def update_dataset_item(
 
 
 @app.delete(
-    "/api/datasets/{dataset_name}/{item_name}",
+    "/datasets/{dataset_name}/{item_name}",
     dependencies=[Depends(verify_auth_token)],
 )
 async def delete_dataset_item(dataset_name: str, item_name: str) -> JSONResponse:

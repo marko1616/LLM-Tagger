@@ -40,7 +40,7 @@ function addCustomBackground<S extends BaseSchemes, K>(
   const background = document.createElement('div')
 
   background.classList.add('background')
-  background.classList.add('fill-area')
+  background.classList.add('editor-grid-bg')
 
   area.area.content.add(background)
 }

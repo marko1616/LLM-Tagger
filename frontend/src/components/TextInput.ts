@@ -20,6 +20,10 @@ class PromptTextInput extends ClassicPreset.Control {
     this.resizeCallback?.()
     this.size = textareaSize
   }
+
+  set(text: string) {
+    this.data.value = text
+  }
 }
 
 export {PromptTextInput}

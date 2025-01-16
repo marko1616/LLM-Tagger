@@ -56,6 +56,7 @@ export default defineComponent({
     watch(editingControl, (newValue) => {
       if(editingControl.controlId == props.data.id) {
         (textareaRef.value as HTMLTextAreaElement).value = newValue.data
+        props.data.set(newValue.data)
       }
     })
     const observer = new ResizeObserver((entries) => {

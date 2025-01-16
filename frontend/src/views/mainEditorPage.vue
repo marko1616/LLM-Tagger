@@ -93,10 +93,6 @@ a:active {
   color: $content-select-color;
 }
 
-body {
-  background-color: $main-bg-color;
-}
-
 .context-tree {
   display: flex;
 }

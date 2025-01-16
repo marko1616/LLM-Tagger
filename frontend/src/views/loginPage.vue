@@ -1,6 +1,6 @@
 <template>
   <div class="fill-area"><div class="login-container" ref="loginContainerRef">
-    <h1 class="title">Login</h1>
+    <h1 class="title">Welcome</h1>
     <form class="login-main">
       <input class="input" placeholder="Authkey" type="password" ref="authkeyRef"/>
       <div class="remember-container">
@@ -45,12 +45,26 @@ export default defineComponent({
       }
     }
   },
+  mounted() {
+    this.enterHandler = (event) => {
+      if (event.key === 'Enter') {
+        this.doLogin()
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+    window.addEventListener('keypress', this.enterHandler)
+  },
+  unmounted() {
+    window.removeEventListener('keypress', this.enterHandler)
+  },
   setup() {
     const authkeyRef = ref<HTMLInputElement | null>(null)
     const rememberRef = ref<HTMLInputElement | null>(null)
     const loginContainerRef = ref<HTMLFormElement | null>(null)
+    const enterHandler = (_event: KeyboardEvent) => {}
 
-    return { authkeyRef, rememberRef, loginContainerRef }
+    return { authkeyRef, rememberRef, loginContainerRef, enterHandler }
   }
 })
 </script>
@@ -65,12 +79,15 @@ export default defineComponent({
   background-color: $container-bg-color;
   border-radius: 2em;
   border: 0.4em solid $container-border-color;
+  justify-content: space-around;
   height: 50%;
   width: 30%;
   min-width: min-content;
 }
 
 .title {
+  font-weight: 900;
+  font-size: 3rem;
   padding: 1em;
   color: $content-color;
 }
@@ -80,7 +97,8 @@ export default defineComponent({
   justify-content: center;
   align-items: left;
   flex-direction: column;
-  flex-grow: 1;
+
+  padding-bottom: 1em;
 }
 
 .input {
@@ -132,6 +150,7 @@ export default defineComponent({
   color: $button-color;
   background-color: $button-bg-color;
   font-size: xx-large;
+  letter-spacing: 0.25em;
 
   border-radius: 0.5em;
   height: 1.75em;

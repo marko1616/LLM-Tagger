@@ -3,11 +3,19 @@
     <simplebar>
       <ul class="dataset-list" ref="datasetListRef">
         <input @input="(_event) => {flushDatasets(true)}" v-model="datasetFilterText" class="search" placeholder="Search item..." />
-        <li class="create">Create new dataset</li>
-        <li v-for="dataset in filteredDatasets" :key="dataset.name" @click="(event) => {flipDropdownState(event)}" @click.stop>
-          <div class="dropdown-list" @click.capture.stop>
+        <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
+          <div class="dropdown-list" @click.stop>
+            <input class="input" placeholder="Enter name" ref="createDatasetNameRef"/>
+            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create</div>
+          </div>
+          <p>Create new dataset</p>
+        </li>
+        <li v-for="dataset in filteredDatasets" :key="dataset.name"
+          @click="(event) => {flipDropdownState(event)}"
+          @contextmenu.prevent="openContextMenu($event, ['create', 'delete'], dataset.name)"
+          @click.stop>
+          <div class="dropdown-list" @click.stop>
             <input class="search" placeholder="Search item..." />
-            <div class="item create" @click="createDataset">Create new item</div>
             <div class="item" v-for="item in dataset.items" :key="item.name">
               {{ item }}
             </div>
@@ -16,15 +24,29 @@
         </li>
       </ul>
     </simplebar>
+    <div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef">
+      <div class="item"
+        @click="() => {doDelete()}"
+        @click.stop
+        v-show="contextMenuTypes.includes('delete')">
+        Delete
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import axios from 'axios'
+import { AxiosError } from 'axios'
 import { defineComponent, ref } from 'vue'
 
 import simplebar from 'simplebar-vue'
 import 'simplebar-vue/dist/simplebar.min.css'
+
+enum ContextMenuTargetType {
+  DATASET = 'dataset',
+  ITEM = 'item',
+}
 
 enum Role {
   SYSTEM = 'system',
@@ -43,6 +65,7 @@ type NodeItem = {
   nodePosition: NodePosition
   positive: string
   negative?: string
+  to: number[]
 }
 
 type DatasetItem = {
@@ -70,10 +93,77 @@ export default defineComponent({
   components: {
     simplebar
   },
+  emits: {
+    'dataset-selected': (payload: {dataset: Dataset}) => {
+      // TODO
+      return true
+    } 
+  },
   methods: {
-    createDataset() {
+    openContextMenu(event: MouseEvent, types: string[], datasetName: string, itemName: string | null = null) {
+      this.contextMenuOpened = true
+      this.contextMenuTypes = types
+      new Promise((_resolve) => {
+        if(this.$refs.contextMenuRef instanceof HTMLElement) {
+          this.$refs.contextMenuRef.style.left = `${event.clientX}px`
+          this.$refs.contextMenuRef.style.top = `${event.clientY}px`
+        }
+      })
+
+      if(itemName === null) {
+        this.contextMenuTargetType = ContextMenuTargetType.DATASET
+      } else {
+        this.contextMenuTargetType = ContextMenuTargetType.ITEM
+      }
+
+      this.contextMenuTargetDataset = datasetName
+      this.contextMenuTargetItem = itemName
+
+      this.foldDropdowns()
+    },
+    closeContextMenu() {
+      this.contextMenuOpened = false
+    },
+    doDelete() {
+      if(this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
+        if(confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
+          axios.delete(`/datasets/${this.contextMenuTargetDataset}`).then((_response) => {
+            this.flushDatasets()
+          })
+        }
+      } else if(this.contextMenuTargetType === ContextMenuTargetType.ITEM) {
+        if(confirm(`Are you sure you want to delete item ${this.contextMenuTargetItem} from dataset ${this.contextMenuTargetDataset}?`)) {
+          axios.delete(`/datasets/${this.contextMenuTargetDataset}/${this.contextMenuTargetItem}`).then((_response) => {
+            this.flushDatasets()
+          })
+        }
+      }
+      this.closeContextMenu()
+    },
+    createItem(datasetName: string, itemName: string) {
+      const item: DatasetItem = {
+        name: itemName,
+        nodeItems: [
+          {
+            role: Role.SYSTEM,
+            nodePosition: {
+              x: 0,
+              y: 0
+            },
+            positive: '',
+            negative: '',
+            to: []
+          }
+        ]
+      }
+
+      axios.post(`/datasets/${datasetName}/create`, item).then((_response) => {
+        this.flushDatasets()
+      })
+    },
+    createDataset(name: string) {
       const dataset: Dataset = {
-        name: 'test',
+        name: name,
         timestamp: Date.now(),
         override: true,
         items: []
@@ -82,6 +172,8 @@ export default defineComponent({
       axios.post('/datasets/create', dataset).then((_response) => {
         this.flushDatasets()
       })
+
+      this.foldDropdowns()
     },
     async flushDatasets(cache?: boolean) {
       if (cache) {
@@ -117,7 +209,20 @@ export default defineComponent({
         })
       } catch (error) {
         console.error('Error fetching datasets:', error)
+        if(error instanceof AxiosError) {
+          if(error.response?.status === 401) {
+            this.$router.push('login/')
+          }
+        }
       }
+    },
+    foldDropdowns(except?: HTMLElement) {
+      const dropdowns = this.datasetListRef?.querySelectorAll('.dropdown-active')
+      dropdowns?.forEach((dropdown) => {
+        if(dropdown !== except) {
+          dropdown.classList.remove('dropdown-active')
+        }
+      })
     },
     flipDropdownState(event: MouseEvent) {
       const target = event.currentTarget
@@ -125,23 +230,23 @@ export default defineComponent({
         if (target.classList.contains('dropdown-active')) {
           target.classList.remove('dropdown-active')
         } else {
+          this.foldDropdowns(target)
           target.classList.add('dropdown-active')
         }
       }
+      this.closeContextMenu()
     },
-    disableDropdownStates() {
-      const dropdowns = this.datasetListRef?.querySelectorAll('.dropdown-active')
-      dropdowns?.forEach((dropdown) => {
-        dropdown.classList.remove('dropdown-active')
-      })
+    globalClick() {
+      this.foldDropdowns()
+      this.contextMenuOpened = false
     }
   },
   mounted() {
     this.flushDatasets()
-    document.addEventListener('click', this.disableDropdownStates)
+    document.addEventListener('click', this.globalClick)
   },
   beforeUnmount() {
-    document.removeEventListener('click', this.disableDropdownStates)
+    document.removeEventListener('click', this.globalClick)
   },
   setup() {
     const datasetsCache: DatasetSummary[] = []
@@ -149,13 +254,41 @@ export default defineComponent({
     const datasetDroppedDown = ref(false)
     const filteredDatasets = ref<DatasetSummary[]>([])
     const datasetFilterText = ref('')
-    return { datasetsCache, datasetFilterText, datasetListRef, datasetDroppedDown, filteredDatasets }
+    const contextMenuOpened = ref(false)
+    const contextMenuTypes = ref<string[]>([])
+    const contextMenuTargetType = ref<ContextMenuTargetType>(ContextMenuTargetType.DATASET)
+    const contextMenuTargetDataset = ref<string>('')
+    const contextMenuTargetItem = ref<string|null>(null)
+    return {
+      datasetsCache,
+      datasetFilterText,
+      datasetListRef,
+      datasetDroppedDown,
+      filteredDatasets,
+      contextMenuOpened,
+      contextMenuTypes,
+      contextMenuTargetType,
+      contextMenuTargetDataset,
+      contextMenuTargetItem,
+    }
   }
 })
 </script>
 
 <style lang="scss" scoped>
 @use "@/styles/color.scss" as *;
+
+.context-menu {
+  position: absolute;
+  margin: 0;
+  display: flex;
+
+  background-color: $dropdown-list-bg-color;
+  color: $content-color;
+  padding: 0.75em;
+
+  user-select: none;
+}
 
 .dataset-panel {
   display: flex;
@@ -230,7 +363,7 @@ export default defineComponent({
     }
 
     &.dropdown-active {
-      & .dropdown-list {
+      & > .dropdown-list {
         pointer-events: all;
         opacity: 1;
         transform: translateY(2em);
@@ -238,7 +371,7 @@ export default defineComponent({
     }
 
     &:not(.dropdown-active) {
-      & .dropdown-list {
+      & > .dropdown-list {
         pointer-events: none;
         opacity: 0;
         transform: translateY(10em);
@@ -260,7 +393,8 @@ export default defineComponent({
   transition: all 0.3s ease;
   font-size: large;
 
-  & .search {
+  & .input,
+  .search {
     display: flex;
     box-sizing: border-box;
     margin-top: 0.75vh;

@@ -1,6 +1,6 @@
 @use "@/styles/color.scss" as *;
 
-.fill-area {
+.editor-grid-bg {
   display: table;
   z-index: -1;
   position: absolute;
@@ -17,7 +17,7 @@
     linear-gradient(90deg, $main-bg-grid-color 1.6px, transparent 1.6px),
     linear-gradient($main-bg-grid-color 0.8px, transparent 0.8px),
     linear-gradient(90deg, $main-bg-grid-color 0.8px, $main-bg-color 0.8px);
-  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
   background-position: -1.6px -1.6px, -1.6px -1.6px, -0.8px -0.8px,
     -0.8px -0.8px;
 }
