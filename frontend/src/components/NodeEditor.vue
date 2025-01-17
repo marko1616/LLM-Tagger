@@ -3,8 +3,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ComponentPublicInstance } from 'vue'
+import { defineComponent } from 'vue'
 import { reteEditor } from './NodeEditor'
+import { DatasetItem } from '@/types/dataset'
 
 export default defineComponent({
   data() {
@@ -19,15 +20,14 @@ export default defineComponent({
     this.editor?.destroy()
   },
   methods: {
+    openItem(item: DatasetItem) {
+      this.editor?.openItem(item)
+    },
     createUserAssistantPairs(): void {
       this.editor?.createUserAssistantPairs()
     }
   }
 })
-
-export type NodeEditorInstance = ComponentPublicInstance<{
-  createUserAssistantPairs: () => void;
-}>
 </script>
 
 <style lang="scss" scoped>

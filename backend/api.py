@@ -218,7 +218,7 @@ async def list_dataset_items(name: str) -> JSONResponse:
     with open(dataset_dir, "r") as f:
         data = json.load(f)
 
-    return JSONResponse([item["name"] for item in data["items"]])
+    return JSONResponse({"items":[item["name"] for item in data["items"]]})
 
 
 @app.get(

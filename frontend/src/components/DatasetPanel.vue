@@ -6,7 +6,7 @@
         <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
           <div class="dropdown-list" @click.stop>
             <input class="input" placeholder="Enter name" ref="createDatasetNameRef"/>
-            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create</div>
+            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create dataset</div>
           </div>
           <p>Create new dataset</p>
         </li>
@@ -16,17 +16,26 @@
           @click.stop>
           <div class="dropdown-list" @click.stop>
             <input class="search" placeholder="Search item..." />
-            <div class="item" v-for="item in dataset.items" :key="item.name">
-              {{ item }}
+            <div class="item" v-for="item in dataset.items" :key="item.name"
+            @click="openItem(dataset.name, item.name)"
+            @click.stop>
+              {{ item.name }}
             </div>
           </div>
           <p>{{ dataset.name }}</p>
         </li>
       </ul>
     </simplebar>
-    <div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef">
+    <div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
+      <input class="input" placeholder="Enter item name" ref="createItemNameRef"/>
       <div class="item"
-        @click="() => {doDelete()}"
+        @click="() => {doCreateItem($refs.createItemNameRef.value)}"
+        @click.stop
+        v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'">
+        Do create item
+      </div>
+      <div class="item"
+        @click="() => {doDeleteDataset()}"
         @click.stop
         v-show="contextMenuTypes.includes('delete')">
         Delete
@@ -39,67 +48,26 @@
 import axios from 'axios'
 import { AxiosError } from 'axios'
 import { defineComponent, ref } from 'vue'
+import { ContextMenuTargetType, Role, DatasetItem, Dataset, DatasetSummary } from '@/types/dataset'
 
 import simplebar from 'simplebar-vue'
 import 'simplebar-vue/dist/simplebar.min.css'
-
-enum ContextMenuTargetType {
-  DATASET = 'dataset',
-  ITEM = 'item',
-}
-
-enum Role {
-  SYSTEM = 'system',
-  USER = 'user',
-  ASSISTANT = 'assistant',
-  TOOL = 'tool',
-}
-
-type NodePosition = {
-  x: number
-  y: number
-}
-
-type NodeItem = {
-  role: Role
-  nodePosition: NodePosition
-  positive: string
-  negative?: string
-  to: number[]
-}
-
-type DatasetItem = {
-  name: string
-  nodeItems: NodeItem[]
-}
-
-type DatasetItemSummary = {
-  name: string
-}
-
-type Dataset = {
-  name: string
-  timestamp: number
-  override: boolean
-  items: DatasetItem[]
-}
-
-type DatasetSummary = {
-  name: string
-  items: DatasetItemSummary[]
-}
 
 export default defineComponent({
   components: {
     simplebar
   },
   emits: {
-    'dataset-selected': (payload: {dataset: Dataset}) => {
-      // TODO
+    'openItem': (_dataset: DatasetItem) => {
       return true
     } 
   },
   methods: {
+    async openItem(datasetName: string, itemName: string) {
+      const response = await axios.get(`/datasets/${datasetName}/${itemName}`)
+      await this.$router.push(`/edit/${datasetName}/${itemName}`)
+      this.$emit('openItem', response.data as DatasetItem)
+    },
     openContextMenu(event: MouseEvent, types: string[], datasetName: string, itemName: string | null = null) {
       this.contextMenuOpened = true
       this.contextMenuTypes = types
@@ -124,7 +92,14 @@ export default defineComponent({
     closeContextMenu() {
       this.contextMenuOpened = false
     },
-    doDelete() {
+    doCreateItem(itemName: string) {
+      axios.post(`/datasets/${itemName}/create`, {
+        item: itemName
+      }).then((_response) => {
+        this.flushDatasets()
+      })
+    },
+    doDeleteDataset() {
       if(this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
         if(confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
           axios.delete(`/datasets/${this.contextMenuTargetDataset}`).then((_response) => {
@@ -195,7 +170,7 @@ export default defineComponent({
           const datasetResponse = await axios.get(`/datasets/${datasetName}/list`)
           return {
             name: datasetName,
-            items: datasetResponse.data
+            items: datasetResponse.data.items.map((itemName: string) => ({ name: itemName }))
           }
         })
 
@@ -256,7 +231,7 @@ export default defineComponent({
     const datasetFilterText = ref('')
     const contextMenuOpened = ref(false)
     const contextMenuTypes = ref<string[]>([])
-    const contextMenuTargetType = ref<ContextMenuTargetType>(ContextMenuTargetType.DATASET)
+    const contextMenuTargetType = ref<string>(ContextMenuTargetType.DATASET)
     const contextMenuTargetDataset = ref<string>('')
     const contextMenuTargetItem = ref<string|null>(null)
     return {
@@ -282,12 +257,28 @@ export default defineComponent({
   position: absolute;
   margin: 0;
   display: flex;
+  flex-direction: column;
 
   background-color: $dropdown-list-bg-color;
   color: $content-color;
   padding: 0.75em;
 
   user-select: none;
+
+  & > * {
+    margin: 0.25em;
+  } 
+
+  & .input,
+  .search {
+    display: flex;
+    box-sizing: border-box;
+    border: 0;
+
+    background: $dropdown-list-bg-color;
+    color: $content-color;
+    outline: none;
+  }
 }
 
 .dataset-panel {

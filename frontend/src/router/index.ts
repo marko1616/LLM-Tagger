@@ -6,12 +6,25 @@ const router = createRouter(
     routes: [
       {
         path: '/',
-        component: () => import('@/views/mainEditorPage.vue')
+        redirect: '/edit'
       },
       {
         path: '/login',
-        component: () => import('@/views/loginPage.vue')
-      }
+        component: () => import('@/views/LoginPage.vue')
+      },
+      {
+        path: '/edit',
+        component: () => import('@/views/MainEditorPage.vue')
+      },
+      {
+        path: '/edit/:datasetName/:itemName',
+        component: () => import('@/views/MainEditorPage.vue')
+      },
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/NotFound.vue')
+      }    
     ]
   }
 )

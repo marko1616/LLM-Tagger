@@ -6,7 +6,7 @@
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
-        <DatasetPanel/>
+        <DatasetPanel @openItem="openItem"/>
       </div>
       <footer>
         <p>
@@ -21,8 +21,9 @@
 <script lang="ts">
 import {ref, toRef, defineComponent} from 'vue'
 
-import NodeEditor, { NodeEditorInstance } from '@/components/NodeEditor.vue'
+import NodeEditor from '@/components/NodeEditor.vue'
 import { openOuterEditor, editingControl } from '@/components/NodeEditorStore'
+import { DatasetItem } from '@/types/dataset'
 import TextEditor from '@/components/TextEditor.vue'
 import DatasetPanel from '@/components/DatasetPanel.vue'
 
@@ -33,6 +34,10 @@ export default defineComponent({
     DatasetPanel
   },
   methods: {
+    openItem(item: DatasetItem) {
+      console.log(item)
+      this.nodeEditorRef?.openItem(item)
+    },
     toggleEditor() {
       this.isEditorVisible = !this.isEditorVisible
     },
@@ -47,7 +52,7 @@ export default defineComponent({
   },
   setup() {
     const isEditorVisible = ref(false)
-    const nodeEditorRef = ref<NodeEditorInstance | null>(null)
+    const nodeEditorRef = ref<typeof NodeEditor | null>(null)
     const editingTextRef = toRef(editingControl, 'data')
 
     const createUserAssistantPairs = () => {

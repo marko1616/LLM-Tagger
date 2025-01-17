@@ -11,6 +11,9 @@ import Socket from './NodeSocket.vue'
 import {PromptTextInput} from './TextInput'
 import TextInputControl from './TextInput.vue'
 
+import { DatasetItem, Role } from '@/types/dataset'
+import { editingControl } from './NodeEditorStore'
+
 import '@/styles/editorbg.scss'
 
 type ContextMenuItem = {
@@ -215,35 +218,97 @@ export class reteEditor {
     }
   }
 
-  systemNodeFactory() {
+  systemNodeFactory(prompt?: string) {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput('System', this.gettextareaResizeCallback(systemNode.id)))
+    systemNode.addControl('TextInput', new PromptTextInput('System', prompt, this.gettextareaResizeCallback(systemNode.id)))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
-  userNodeFactory() {
+  userNodeFactory(prompt?: string) {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput('User', this.gettextareaResizeCallback(userNode.id)))
+    userNode.addControl('TextInput', new PromptTextInput('User', prompt, this.gettextareaResizeCallback(userNode.id)))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
   }
 
-  assistantNodeFactory() {
+  assistantNodeFactory(prompt?: string) {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive', this.gettextareaResizeCallback(assistantNode.id)))
+    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, this.gettextareaResizeCallback(assistantNode.id)))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
   }
 
-  assistantPairwiseNodeFactory() {
+  assistantPairwiseNodeFactory(promptPositive?: string, promptNegative?: string) {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInput-Positive', new PromptTextInput('Assistant positive', this.gettextareaResizeCallback(assistantPairwiseNode.id)))
-    assistantPairwiseNode.addControl('TextInput-Negative', new PromptTextInput('Assistant negative', this.gettextareaResizeCallback(assistantPairwiseNode.id)))
+    assistantPairwiseNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', promptPositive, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
+    assistantPairwiseNode.addControl('TextInputNegative', new PromptTextInput('Assistant negative', promptNegative, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode
+  }
+
+  async openItem(item: DatasetItem) {
+    // Remove all
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nodes:ClassicPreset.Node<any>[] = []
+    for (const node of this.getNodes()) {
+      const nodeId = node.id
+      if(nodeId !== this.rootNode.id) {
+        await this.editor.removeNode(node.id)
+        const connections = this.editor.getConnections().filter(c => {
+          return c.source === nodeId || c.target === nodeId
+        })
+        for(const connection of connections) {
+          await this.editor.removeConnection(connection.id)
+        }
+      }
+    }
+    for (const nodeItem of item.nodeItems) {
+      switch(nodeItem.role) {
+        case Role.SYSTEM:
+          editingControl.controlId = this.rootNode.controls['TextInput']?.id as string
+          editingControl.data = nodeItem.positive
+          nodes.push(this.rootNode)
+          await this.area.translate(this.rootNode.id, nodeItem.nodePosition)
+          await Promise.resolve()
+          break
+        case Role.USER:
+          const node = this.userNodeFactory(nodeItem.positive)
+          nodes.push(node)
+          await this.editor.addNode(node)
+          await this.area.translate(node.id, nodeItem.nodePosition)
+          await Promise.resolve()
+          break
+        case Role.ASSISTANT:
+          if(nodeItem.negative) {
+            const node = this.assistantPairwiseNodeFactory(nodeItem.positive, nodeItem.negative)
+            nodes.push(node)
+            await this.editor.addNode(node)
+            await this.area.translate(node.id, nodeItem.nodePosition)
+          } else {
+            const node = this.assistantNodeFactory(nodeItem.positive)
+            nodes.push(node)
+            await this.editor.addNode(node)
+            await this.area.translate(node.id, nodeItem.nodePosition)
+          }
+          await Promise.resolve()
+          break
+        case Role.TOOL:
+          // TODO
+          await Promise.resolve()
+          break
+      }
+    }
+    // Connect
+    for (let i = 0; i < item.nodeItems.length; i++) {
+      const thisNode = item.nodeItems[i]
+      const targetNodes = thisNode.to
+      for (const targetNodeIndex of targetNodes) {
+        await this.editor.addConnection(new ClassicPreset.Connection(nodes[i], 'context-out', nodes[targetNodeIndex], 'context-in'))
+      }
+    }
   }
 }
