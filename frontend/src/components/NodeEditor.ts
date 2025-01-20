@@ -268,21 +268,23 @@ export class reteEditor {
     }
     for (const nodeItem of item.nodeItems) {
       switch(nodeItem.role) {
-        case Role.SYSTEM:
+        case Role.SYSTEM: {
           editingControl.controlId = this.rootNode.controls['TextInput']?.id as string
           editingControl.data = nodeItem.positive
           nodes.push(this.rootNode)
           await this.area.translate(this.rootNode.id, nodeItem.nodePosition)
           await Promise.resolve()
           break
-        case Role.USER:
+        }
+        case Role.USER: {
           const node = this.userNodeFactory(nodeItem.positive)
           nodes.push(node)
           await this.editor.addNode(node)
           await this.area.translate(node.id, nodeItem.nodePosition)
           await Promise.resolve()
           break
-        case Role.ASSISTANT:
+        }
+        case Role.ASSISTANT: {
           if(nodeItem.negative) {
             const node = this.assistantPairwiseNodeFactory(nodeItem.positive, nodeItem.negative)
             nodes.push(node)
@@ -296,10 +298,12 @@ export class reteEditor {
           }
           await Promise.resolve()
           break
-        case Role.TOOL:
+        }
+        case Role.TOOL: {
           // TODO
           await Promise.resolve()
           break
+        }
       }
     }
     // Connect

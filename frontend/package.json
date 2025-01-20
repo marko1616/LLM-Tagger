@@ -19,7 +19,7 @@
     "rete-context-menu-plugin": "^2.0.4",
     "rete-render-utils": "^2.0.3",
     "rete-vue-plugin": "^2.1.1",
-    "sass": "^1.83.0",
+    "sass": "^1.83.4",
     "sass-loader": "^16.0.4",
     "simplebar-vue": "^2.4.0",
     "styled-components": "^6.1.13",

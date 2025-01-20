@@ -62,6 +62,7 @@ export default defineComponent({
     const authkeyRef = ref<HTMLInputElement | null>(null)
     const rememberRef = ref<HTMLInputElement | null>(null)
     const loginContainerRef = ref<HTMLFormElement | null>(null)
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const enterHandler = (_event: KeyboardEvent) => {}
 
     return { authkeyRef, rememberRef, loginContainerRef, enterHandler }
