@@ -266,11 +266,11 @@ async def update_dataset_item(
     with open(dataset_dir, "r") as f:
         data = json.load(f)
 
-    for item in data["items"]:
-        if item["name"] == item.name:
-            return JSONResponse(
-                content={"message": "Item already exists."}, status_code=400
-            )
+    if item.name in data["items"]:
+        return JSONResponse(
+            content={"message": "Item already exists."}, status_code=400
+        )
+
     else:
         data["items"].append(item.model_dump())
     data["timestamp"] = int(time.time())

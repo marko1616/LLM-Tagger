@@ -18,6 +18,7 @@
             <input class="search" placeholder="Search item..." />
             <div class="item" v-for="item in dataset.items" :key="item.name"
             @click="openItem(dataset.name, item.name)"
+            @contextmenu.prevent="openContextMenu($event, ['delete'], dataset.name, item.name)"
             @click.stop>
               {{ item.name }}
             </div>
@@ -27,18 +28,24 @@
       </ul>
     </simplebar>
     <div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
-      <input class="input" placeholder="Enter item name" ref="createItemNameRef"/>
+      <input class="input" placeholder="Enter item name" ref="createItemNameRef" v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'"/>
       <div class="item"
         @click="() => {doCreateItem($refs.createItemNameRef.value)}"
         @click.stop
         v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'">
-        Do create item
+        Create item
       </div>
       <div class="item"
         @click="() => {doDeleteDataset()}"
         @click.stop
-        v-show="contextMenuTypes.includes('delete')">
-        Delete
+        v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'dataset'">
+        Delete dataset
+      </div>
+      <div class="item"
+        @click="() => {doDeleteDataset()}"
+        @click.stop
+        v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'item'">
+        Delete dataset
       </div>
     </div>
   </div>
@@ -93,8 +100,20 @@ export default defineComponent({
       this.contextMenuOpened = false
     },
     doCreateItem(itemName: string) {
-      axios.post(`/datasets/${itemName}/create`, {
-        item: itemName
+      axios.post(`/datasets/${this.contextMenuTargetDataset}/create`, {
+        name: itemName,
+        nodeItems: [
+          {
+            role: Role.SYSTEM,
+            nodePosition: {
+              x: 0,
+              y: 0
+            },
+            positive: '',
+            negative: '',
+            to: []
+          }
+        ]
       }).then((_response) => {
         this.flushDatasets()
       })
