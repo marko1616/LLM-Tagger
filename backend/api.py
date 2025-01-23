@@ -31,9 +31,15 @@ class NodePosition(BaseModel):
     y: float
 
 
+class NodeSize(BaseModel):
+    width: float
+    height: float
+
+
 class NodeItem(BaseModel):
     role: Role
     nodePosition: NodePosition
+    nodeSize: NodeSize
     positive: str
     negative: Optional[str]
     to: list[int]
@@ -156,6 +162,11 @@ async def create_dataset(dataset: Dataset) -> JSONResponse:
     """
     dataset_dir = Path("./datasets") / f"{dataset.name}.json"
 
+    if dataset.name == "":
+        return JSONResponse(
+            content={"message": "Dataset name cannot be empty."}, status_code=400
+        )
+
     if os.path.exists(dataset_dir):
         return JSONResponse(
             content={"message": "Dataset already exists."}, status_code=400
@@ -257,6 +268,11 @@ async def update_dataset_item(
     Creates a dataset item.
     """
     dataset_dir = Path("./datasets") / f"{dataset_name}.json"
+
+    if item.name == "":
+        return JSONResponse(
+            content={"message": "Item name cannot be empty."}, status_code=400
+        )
 
     if not dataset_dir.exists():
         return JSONResponse(

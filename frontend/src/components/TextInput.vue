@@ -9,7 +9,7 @@
       class="data-input"
       ref="textareaRef"
       @pointerdown.stop=""
-      @input="data.onInput"
+      @input="onInput"
     ></textarea>
   </div>
 </template>
@@ -18,7 +18,7 @@
 import { defineComponent, ref, watch } from 'vue'
 import { PromptTextInput } from './TextInput'
 
-import { editingControl, openOuterEditor } from './NodeEditorStore'
+import { editingControl, editingState, openOuterEditor } from './NodeEditorStore'
 
 interface Props {
   data: PromptTextInput;
@@ -36,6 +36,10 @@ export default defineComponent({
       editingControl.controlId = this.data.id
       editingControl.data = (this.textareaRef as HTMLTextAreaElement).value
       openOuterEditor.value()
+    },
+    onInput(value: Event) {
+      editingState.saved = false
+      this.data.onInput(value)
     }
   },
   mounted() {
@@ -47,18 +51,18 @@ export default defineComponent({
       }
       this.observer.observe(this.textareaRef)
     }
+    watch(editingControl, (newValue) => {
+      if(editingControl.controlId == this.$props.data.id) {
+        (this.textareaRef as HTMLTextAreaElement).value = newValue.data
+        this.$props.data.set(newValue.data)
+      }
+    })
   },
   unmounted() {
     this.observer.disconnect()
   },
   setup(props: Props) {
     const textareaRef = ref<HTMLTextAreaElement | null>(null)
-    watch(editingControl, (newValue) => {
-      if(editingControl.controlId == props.data.id) {
-        (textareaRef.value as HTMLTextAreaElement).value = newValue.data
-        props.data.set(newValue.data)
-      }
-    })
     const observer = new ResizeObserver((entries) => {
       const textAreaSize = entries[0].contentRect
       props.data.saveSize(textAreaSize)
@@ -111,6 +115,8 @@ export default defineComponent({
   }
 
   .data-input {
+    width: 256px;
+    height: 64px;
     display: flex;
     overflow: hidden;
     caret-color: $content-color;

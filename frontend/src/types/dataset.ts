@@ -15,9 +15,15 @@ type NodePosition = {
   y: number
 }
 
+type NodeSize = {
+  width: number
+  height: number
+}
+
 type NodeItem = {
   role: Role
   nodePosition: NodePosition
+  nodeSize: NodeSize
   positive: string
   negative?: string
   to: number[]
@@ -44,4 +50,4 @@ type DatasetSummary = {
   items: DatasetItemSummary[]
 }
 
-export { ContextMenuTargetType, Role, NodePosition, NodeItem, DatasetItem, DatasetItemSummary, Dataset, DatasetSummary }
+export { ContextMenuTargetType, Role, NodePosition, NodeSize, NodeItem, DatasetItem, DatasetItemSummary, Dataset, DatasetSummary }

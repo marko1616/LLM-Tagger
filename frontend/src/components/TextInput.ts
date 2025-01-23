@@ -1,15 +1,24 @@
 import {ref} from 'vue'
 import {ClassicPreset} from 'rete'
+import {NodeSize} from '@/types/dataset'
 
 class PromptTextInput extends ClassicPreset.Control {
   title = ref('')
   data = ref('')
-  size: DOMRectReadOnly | null = null
+  size: NodeSize
 
-  constructor(title: string, prompt?: string, private resizeCallback?: () => void) {
+  constructor(title: string, prompt?: string, private resizeCallback?: () => void, size? : NodeSize) {
     super()
     this.data.value = prompt ?? ''
     this.title.value = title
+    if(size) {
+      this.size = size
+    } else {
+      this.size = {
+        width: 256,
+        height: 64
+      }
+    }
   }
 
   onInput(event: Event) {
@@ -19,7 +28,10 @@ class PromptTextInput extends ClassicPreset.Control {
 
   saveSize(textareaSize: DOMRectReadOnly) {
     this.resizeCallback?.()
-    this.size = textareaSize
+    this.size = {
+      width: textareaSize.width,
+      height: textareaSize.height
+    }
   }
 
   set(text: string) {

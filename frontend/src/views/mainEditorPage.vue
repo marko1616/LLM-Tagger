@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <TextEditor @close="closeEditor" :isEditorVisible="isEditorVisible" :editingText="editingTextRef" @updateText="updateText"/>
-    <div class="context-tree-container">
-      <NodeEditor class="context-tree" ref="nodeEditorRef"/>
+    <div class="node-editor-container">
+      <NodeEditor class="node-editor" ref="nodeEditorRef"/>
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
@@ -35,7 +35,6 @@ export default defineComponent({
   },
   methods: {
     openItem(item: DatasetItem) {
-      console.log(item)
       this.nodeEditorRef?.openItem(item)
     },
     toggleEditor() {
@@ -49,6 +48,10 @@ export default defineComponent({
     openOuterEditor.value = () => {
       this.toggleEditor()
     }
+    window.addEventListener('keydown', this.ctrlSaveHandler)
+  },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.ctrlSaveHandler)
   },
   setup() {
     const isEditorVisible = ref(false)
@@ -63,12 +66,19 @@ export default defineComponent({
       editingControl.data = text
     }
 
+    const ctrlSaveHandler = (event: KeyboardEvent) => {
+      if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
+        event.preventDefault();
+      }
+    }
+
     return {
       createUserAssistantPairs,
       nodeEditorRef,
       isEditorVisible,
       editingTextRef,
-      updateText
+      updateText,
+      ctrlSaveHandler
     }
   }
 })
@@ -98,11 +108,11 @@ a:active {
   color: $content-select-color;
 }
 
-.context-tree {
+.node-editor {
   display: flex;
 }
 
-.context-tree-container {
+.node-editor-container {
   flex: 3;
 
   display: flex;

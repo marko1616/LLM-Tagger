@@ -6,6 +6,7 @@
 <script lang="ts">
 import {ref, defineComponent} from 'vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import { editingState } from './components/NodeEditorStore';
 
 export default defineComponent({
   components: {
@@ -26,6 +27,12 @@ export default defineComponent({
     this.$router.beforeEach(async (_to, _from, next) => {
       await this.loading?.in()
       next()
+    })
+    window.addEventListener('beforeunload', function (event) {
+      console.log(editingState.saved)
+      if(editingState.saved === false) {
+        event.preventDefault()
+      }
     })
   },
   setup() {

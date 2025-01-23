@@ -11,8 +11,7 @@ import Socket from './NodeSocket.vue'
 import {PromptTextInput} from './TextInput'
 import TextInputControl from './TextInput.vue'
 
-import { DatasetItem, Role } from '@/types/dataset'
-import { editingControl } from './NodeEditorStore'
+import { DatasetItem, NodeSize, Role } from '@/types/dataset'
 
 import '@/styles/editorbg.scss'
 
@@ -55,9 +54,11 @@ export class reteEditor {
   public readonly connection: ConnectionPlugin<Schemes, AreaExtra>
   public readonly render: VuePlugin<Schemes, AreaExtra>
   public readonly contextMenu: ContextMenuPlugin<Schemes>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly rootNode: ClassicPreset.Node<any>
   public readonly handleKeyDown: (event: KeyboardEvent) => void
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private rootNode: ClassicPreset.Node<any>
+  private replaceRootNode: boolean = false;
 
   constructor(container: HTMLElement) {
     this.socket = new ClassicPreset.Socket('socket')
@@ -137,7 +138,7 @@ export class reteEditor {
     this.rootNode = this.systemNodeFactory()
     this.editor.addNode(this.rootNode)
     this.editor.addPipe(event => {
-      if (event.type === 'noderemove' && event.data.id === this.rootNode.id) {
+      if (event.type === 'noderemove' && event.data.id === this.rootNode.id && !this.replaceRootNode) {
         return undefined
       }
       return event
@@ -218,33 +219,33 @@ export class reteEditor {
     }
   }
 
-  systemNodeFactory(prompt?: string) {
+  systemNodeFactory(prompt?: string, size?: NodeSize) {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput('System', prompt, this.gettextareaResizeCallback(systemNode.id)))
+    systemNode.addControl('TextInput', new PromptTextInput('System', prompt, this.gettextareaResizeCallback(systemNode.id), size))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
-  userNodeFactory(prompt?: string) {
+  userNodeFactory(prompt?: string, size?: NodeSize) {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput('User', prompt, this.gettextareaResizeCallback(userNode.id)))
+    userNode.addControl('TextInput', new PromptTextInput('User', prompt, this.gettextareaResizeCallback(userNode.id), size))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
   }
 
-  assistantNodeFactory(prompt?: string) {
+  assistantNodeFactory(prompt?: string, size?: NodeSize) {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, this.gettextareaResizeCallback(assistantNode.id)))
+    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, this.gettextareaResizeCallback(assistantNode.id), size))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
   }
 
-  assistantPairwiseNodeFactory(promptPositive?: string, promptNegative?: string) {
+  assistantPairwiseNodeFactory(promptPositive?: string, promptNegative?: string, size?: NodeSize) {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', promptPositive, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
-    assistantPairwiseNode.addControl('TextInputNegative', new PromptTextInput('Assistant negative', promptNegative, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
+    assistantPairwiseNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', promptPositive, this.gettextareaResizeCallback(assistantPairwiseNode.id), size))
+    assistantPairwiseNode.addControl('TextInputNegative', new PromptTextInput('Assistant negative', promptNegative, this.gettextareaResizeCallback(assistantPairwiseNode.id), size))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode
@@ -253,31 +254,32 @@ export class reteEditor {
   async openItem(item: DatasetItem) {
     // Remove all
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.replaceRootNode = true
     const nodes:ClassicPreset.Node<any>[] = []
     for (const node of this.getNodes()) {
       const nodeId = node.id
-      if(nodeId !== this.rootNode.id) {
-        await this.editor.removeNode(node.id)
-        const connections = this.editor.getConnections().filter(c => {
-          return c.source === nodeId || c.target === nodeId
-        })
-        for(const connection of connections) {
-          await this.editor.removeConnection(connection.id)
-        }
+      await this.editor.removeNode(node.id)
+      const connections = this.editor.getConnections().filter(c => {
+        return c.source === nodeId || c.target === nodeId
+      })
+      for(const connection of connections) {
+        await this.editor.removeConnection(connection.id)
       }
     }
+    this.replaceRootNode = false
     for (const nodeItem of item.nodeItems) {
       switch(nodeItem.role) {
         case Role.SYSTEM: {
-          editingControl.controlId = this.rootNode.controls['TextInput']?.id as string
-          editingControl.data = nodeItem.positive
-          nodes.push(this.rootNode)
-          await this.area.translate(this.rootNode.id, nodeItem.nodePosition)
+          const node = this.systemNodeFactory(nodeItem.positive, nodeItem.nodeSize)
+          nodes.push(node)
+          await this.editor.addNode(node)
+          await this.area.translate(node.id, nodeItem.nodePosition)
+          this.rootNode = node
           await Promise.resolve()
           break
         }
         case Role.USER: {
-          const node = this.userNodeFactory(nodeItem.positive)
+          const node = this.userNodeFactory(nodeItem.positive, nodeItem.nodeSize)
           nodes.push(node)
           await this.editor.addNode(node)
           await this.area.translate(node.id, nodeItem.nodePosition)
@@ -286,12 +288,12 @@ export class reteEditor {
         }
         case Role.ASSISTANT: {
           if(nodeItem.negative) {
-            const node = this.assistantPairwiseNodeFactory(nodeItem.positive, nodeItem.negative)
+            const node = this.assistantPairwiseNodeFactory(nodeItem.positive, nodeItem.negative, nodeItem.nodeSize)
             nodes.push(node)
             await this.editor.addNode(node)
             await this.area.translate(node.id, nodeItem.nodePosition)
           } else {
-            const node = this.assistantNodeFactory(nodeItem.positive)
+            const node = this.assistantNodeFactory(nodeItem.positive, nodeItem.nodeSize)
             nodes.push(node)
             await this.editor.addNode(node)
             await this.area.translate(node.id, nodeItem.nodePosition)

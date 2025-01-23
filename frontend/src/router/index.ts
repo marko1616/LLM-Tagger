@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from 'vue-router'
+import { editingState } from '@/components/NodeEditorStore'
 
 const router = createRouter(
   {
@@ -28,5 +29,20 @@ const router = createRouter(
     ]
   }
 )
+
+router.beforeEach((_to, from) => {
+  if(from.path.startsWith('/edit') && !editingState.saved) {
+    const confirmResult = confirm('You have unsaved changes. Are you sure you want to leave?')
+    if(confirmResult) {
+      return true
+    }
+    return false
+  }
+  return true
+})
+
+router.afterEach((_to, _from) => {
+  editingState.saved = true
+})
 
 export default router

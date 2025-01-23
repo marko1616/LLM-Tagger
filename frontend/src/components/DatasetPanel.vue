@@ -6,7 +6,7 @@
         <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
           <div class="dropdown-list" @click.stop>
             <input class="input" placeholder="Enter name" ref="createDatasetNameRef"/>
-            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create dataset</div>
+            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create</div>
           </div>
           <p>Create new dataset</p>
         </li>
@@ -18,7 +18,7 @@
             <input class="search" placeholder="Search item..." />
             <div class="item" v-for="item in dataset.items" :key="item.name"
             @click="openItem(dataset.name, item.name)"
-            @contextmenu.prevent="openContextMenu($event, ['delete'], dataset.name, item.name)"
+            @contextmenu.prevent.stop="openContextMenu($event, ['delete'], dataset.name, item.name)"
             @click.stop>
               {{ item.name }}
             </div>
@@ -27,8 +27,8 @@
         </li>
       </ul>
     </simplebar>
-    <div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
-      <input class="input" placeholder="Enter item name" ref="createItemNameRef" v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'"/>
+    <transition name="context-menu"><div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
+      <input class="input" placeholder="Enter new item name" ref="createItemNameRef" v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'"/>
       <div class="item"
         @click="() => {doCreateItem($refs.createItemNameRef.value)}"
         @click.stop
@@ -36,18 +36,18 @@
         Create item
       </div>
       <div class="item"
-        @click="() => {doDeleteDataset()}"
+        @click="() => {doDelete()}"
         @click.stop
         v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'dataset'">
         Delete dataset
       </div>
       <div class="item"
-        @click="() => {doDeleteDataset()}"
+        @click="() => {doDelete()}"
         @click.stop
         v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'item'">
-        Delete dataset
+        Delete item
       </div>
-    </div>
+    </div></transition>
   </div>
 </template>
 
@@ -109,6 +109,10 @@ export default defineComponent({
               x: 0,
               y: 0
             },
+            nodeSize: {
+              width: 256,
+              height: 64
+            },
             positive: '',
             negative: '',
             to: []
@@ -118,7 +122,7 @@ export default defineComponent({
         this.flushDatasets()
       })
     },
-    doDeleteDataset() {
+    doDelete() {
       if(this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
         if(confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
           axios.delete(`/datasets/${this.contextMenuTargetDataset}`).then((_response) => {
@@ -143,6 +147,10 @@ export default defineComponent({
             nodePosition: {
               x: 0,
               y: 0
+            },
+            nodeSize: {
+              width: 256,
+              height: 64
             },
             positive: '',
             negative: '',
@@ -272,6 +280,12 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/styles/color.scss" as *;
 
+.context-menu-enter-from,
+.context-menu-leave-to  {
+  opacity: 0;
+  transform: translateY(2em);
+}
+
 .context-menu {
   position: absolute;
   margin: 0;
@@ -283,6 +297,7 @@ export default defineComponent({
   padding: 0.75em;
 
   user-select: none;
+  transition: all 0.3s ease;
 
   & > * {
     margin: 0.25em;

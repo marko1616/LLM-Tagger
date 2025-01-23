@@ -45,7 +45,7 @@ export default defineComponent({
             const form = new FormData()
             form.append('file', file)
             axios
-              .post('/api/img/uploads', form, {
+              .post('/img/uploads', form, {
                 headers: {
                   'Content-Type': 'multipart/form-data'
                 }
