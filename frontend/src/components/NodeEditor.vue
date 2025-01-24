@@ -4,22 +4,25 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { reteEditor } from './NodeEditor'
+import { ReteEditor } from './NodeEditor'
 import { DatasetItem } from '@/types/dataset'
 
 export default defineComponent({
   data() {
     return {
-      editor: null as reteEditor | null
+      editor: null as ReteEditor | null
     }
   },
   mounted() {
-    this.editor = new reteEditor(this.$refs.rete as HTMLElement)
+    this.editor = new ReteEditor(this.$refs.rete as HTMLElement)
   },
   beforeUnmount() {
     this.editor?.destroy()
   },
   methods: {
+    exportDatasetItem() {
+      return this.editor?.exportDatasetItem()
+    },
     openItem(item: DatasetItem) {
       this.editor?.openItem(item)
     },
@@ -35,9 +38,8 @@ export default defineComponent({
 
 .rete {
   display: flex;
-
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 </style>
 
@@ -45,11 +47,11 @@ export default defineComponent({
 @use "@/styles/color.scss" as *;
 
 [rete-context-menu] {
+  box-sizing: border-box;
   min-width: max-content;
   background: $container-bg-color;
   border: 2px solid $container-border-color;
   border-radius: 10px;
-  box-sizing: border-box;
   transition: border-color 0.3s ease;
 
   &:hover {
@@ -57,11 +59,11 @@ export default defineComponent({
   }
 
   .block {
-    background: $container-bg-color;
-    border-radius: 0.5vw;
-    border: 0px;
     display: flex;
     align-items: center;
+    background: $container-bg-color;
+    border: 0;
+    border-radius: 0.5vw;
     transition: background 0.2s ease;
 
     &.item {
@@ -70,23 +72,23 @@ export default defineComponent({
     }
 
     &:hover {
+      color: $content-color !important;
       background: $container-bg-hover-color !important;
       border-color: $container-border-hover-color !important;
-      color: $content-color !important;
     }
 
     &:focus-visible {
-      outline: 0px;
+      outline: 0;
     }
   }
 
   .block:first-child input {
     width: 100%;
-    background: $container-input-bg-color;
     color: $content-color;
+    outline: none;
+    background: $container-input-bg-color;
     border: 2px solid $container-border-color;
     border-radius: 10px;
-    outline: none;
     transition: all 0.3s ease;
 
     &:focus {
@@ -96,8 +98,8 @@ export default defineComponent({
   }
 
   .search {
-    color: $content-color;
     font-size: 1.4vh;
+    color: $content-color;
   }
 }
 </style>

@@ -1,3 +1,4 @@
+import {UnwrapRef} from 'vue'
 import {NodeEditor, GetSchemes, ClassicPreset, BaseSchemes} from 'rete'
 import {AreaPlugin, AreaExtensions, BaseAreaPlugin} from 'rete-area-plugin'
 import {ConnectionPlugin, Presets as ConnectionPresets} from 'rete-connection-plugin'
@@ -47,7 +48,12 @@ function addCustomBackground<S extends BaseSchemes, K>(
   area.area.content.add(background)
 }
 
-export class reteEditor {
+/**
+ * A Rete-based editor for creating and managing nodes and connections.
+ * This class provides functionality for adding nodes, creating connections,
+ * handling context menus, and exporting/importing dataset items.
+ */
+export class ReteEditor {
   public readonly socket: ClassicPreset.Socket
   public readonly editor: NodeEditor<Schemes>
   public readonly area: AreaPlugin<Schemes, AreaExtra>
@@ -58,8 +64,12 @@ export class reteEditor {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private rootNode: ClassicPreset.Node<any>
-  private replaceRootNode: boolean = false;
+  private replaceRootNode = false;
 
+  /**
+   * Initializes a new instance of the ReteEditor class.
+   * @param container - The HTML element that will contain the editor.
+   */
   constructor(container: HTMLElement) {
     this.socket = new ClassicPreset.Socket('socket')
     this.editor = new NodeEditor<Schemes>()
@@ -251,10 +261,100 @@ export class reteEditor {
     return assistantPairwiseNode
   }
 
+  getConnectionsFrom(nodeId: string) {
+    const connections = this.getConnections()
+    return connections.filter(connection => connection.source === nodeId)
+  }
+
+  exportDatasetItem() {
+    const datasetItem: DatasetItem = {name:'', nodeItems:[]}
+    const nodes = this.getNodes()
+    nodes.forEach(node => {
+      const title = node.label
+      switch(title) {
+        case 'Input-System': {
+          const positivePrompt = (node.controls['TextInput'] as UnwrapRef<PromptTextInput>).data
+          const {width, height} = (node.controls['TextInput'] as PromptTextInput).size 
+          const {x, y} = this.getNodePosition(node.id) as Position
+          const to: number[] = []
+          this.getConnectionsFrom(node.id).forEach(connection => {
+            const targetNodeId = connection.target
+            to.push(nodes.findIndex(node => node.id === targetNodeId))
+          })
+          datasetItem.nodeItems.push({
+            role: Role.SYSTEM,
+            nodePosition: {x, y},
+            nodeSize: {width, height},
+            positive: positivePrompt,
+            to: to
+          })
+          console.log(datasetItem)
+          break
+        }
+        case 'Input-User': {
+          const positivePrompt = (node.controls['TextInput'] as UnwrapRef<PromptTextInput>).data
+          const {width, height} = (node.controls['TextInput'] as PromptTextInput).size 
+          const {x, y} = this.getNodePosition(node.id) as Position
+          const to: number[] = []
+          this.getConnectionsFrom(node.id).forEach(connection => {
+            const targetNodeId = connection.target
+            to.push(nodes.findIndex(node => node.id === targetNodeId))
+          })
+          datasetItem.nodeItems.push({
+            role: Role.USER,
+            nodePosition: {x, y},
+            nodeSize: {width, height},
+            positive: positivePrompt,
+            to: to
+          })
+          break
+        }
+        case 'Input-Assistant': {
+          const positivePrompt = (node.controls['TextInputPositive'] as UnwrapRef<PromptTextInput>).data as string
+          const {width, height} = (node.controls['TextInputPositive'] as PromptTextInput).size
+          const {x, y} = this.getNodePosition(node.id) as Position
+          const to: number[] = []
+          this.getConnectionsFrom(node.id).forEach(connection => {
+            const targetNodeId = connection.target
+            to.push(nodes.findIndex(node => node.id === targetNodeId))
+          })
+          datasetItem.nodeItems.push({
+            role: Role.ASSISTANT,
+            nodePosition: {x, y},
+            nodeSize: {width, height},
+            positive: positivePrompt,
+            to: to
+          })
+          break
+        }
+        case 'Input-Assistant-Pairwise': {
+          const positivePrompt = (node.controls['TextInputPositive'] as UnwrapRef<PromptTextInput>).data
+          const negativePrompt = (node.controls['TextInputNegative'] as UnwrapRef<PromptTextInput>).data
+          const {width, height} = (node.controls['TextInputPositive'] as PromptTextInput).size
+          const {x, y} = this.getNodePosition(node.id) as Position
+          const to: number[] = []
+          this.getConnectionsFrom(node.id).forEach(connection => {
+            const targetNodeId = connection.target
+            to.push(nodes.findIndex(node => node.id === targetNodeId))
+          })
+          datasetItem.nodeItems.push({
+            role: Role.ASSISTANT,
+            nodePosition: {x, y},
+            nodeSize: {width, height},
+            positive: positivePrompt,
+            negative: negativePrompt,
+            to: to
+          })
+          break
+        }
+      }
+    })
+  }
+
   async openItem(item: DatasetItem) {
     // Remove all
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.replaceRootNode = true
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodes:ClassicPreset.Node<any>[] = []
     for (const node of this.getNodes()) {
       const nodeId = node.id

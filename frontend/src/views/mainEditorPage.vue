@@ -68,6 +68,7 @@ export default defineComponent({
 
     const ctrlSaveHandler = (event: KeyboardEvent) => {
       if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
+        nodeEditorRef.value?.exportDatasetItem()
         event.preventDefault();
       }
     }
@@ -90,7 +91,6 @@ export default defineComponent({
 footer {
   display: flex;
   justify-content: center;
-
   margin-top: 1vh;
   color: $content-color;
 }
@@ -113,33 +113,30 @@ a:active {
 }
 
 .node-editor-container {
-  flex: 3;
-
   display: flex;
+  flex: 3;
   margin-right: -1vw;
 }
 
 .sidebar {
-  flex: 1;
   z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  max-height: 100%;
+  padding: 16px;
+  padding-right: 1vw;
+  padding-left: 1vw;
   background-color: $container-bg-color;
   border-left: 1px solid $container-border-color;
   border-top-left-radius: 1vw;
   border-bottom-left-radius: 1vw;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  padding-left: 1vw;
-  padding-right: 1vw;
-
-  max-height: 100%;
 }
 
 .sidebar-main-panel {
   display: flex;
-  overflow: hidden;
-
   flex-grow: 1;
+  overflow: hidden;
 }
 
 .sidebar-buttom-panel {
@@ -151,18 +148,17 @@ a:active {
 <style lang="scss">
 html, body {
   display: flex;
-
-  margin: 0;
-  padding: 0;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
 }
 
 #app {
   display: flex;
-  font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
+  font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
 }
 </style>

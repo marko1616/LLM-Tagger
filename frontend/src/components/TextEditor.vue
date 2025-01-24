@@ -73,8 +73,33 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1024;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgb(0 0 0 / 25%);
+}
+
+.modal-content {
+  position: relative;
+  min-width: 75vw;
+  max-height: 90vh;
+  padding: 20px;
+  overflow: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+}
+
 .zoom-fade-enter-active {
   transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
   & .modal-content {
     transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -82,6 +107,7 @@ export default defineComponent({
 
 .zoom-fade-leave-active {
   transition: all 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+
   & .modal-content {
     transition: all 0.4s cubic-bezier(0.75, 0, 0.25, 1);
   }
@@ -90,6 +116,7 @@ export default defineComponent({
 .zoom-fade-enter-from,
 .zoom-fade-leave-to {
   opacity: 0;
+
   & .modal-content {
     transform: scale(0);
   }
@@ -98,33 +125,10 @@ export default defineComponent({
 .zoom-fade-enter-to,
 .zoom-fade-leave-from {
   opacity: 1;
+
   & .modal-content {
     transform: scale(1);
   }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.25);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1024;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: relative;
-  min-width: 75vw;
-  max-height: 90vh;
-  overflow: auto;
 }
 </style>
 

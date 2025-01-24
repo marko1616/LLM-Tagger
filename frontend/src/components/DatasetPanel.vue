@@ -279,6 +279,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use "@/styles/color.scss" as *;
+@use "sass:color";
 
 .context-menu-enter-from,
 .context-menu-leave-to  {
@@ -288,15 +289,13 @@ export default defineComponent({
 
 .context-menu {
   position: absolute;
-  margin: 0;
   display: flex;
   flex-direction: column;
-
-  background-color: $dropdown-list-bg-color;
-  color: $content-color;
   padding: 0.75em;
-
+  margin: 0;
+  color: $content-color;
   user-select: none;
+  background-color: $dropdown-list-bg-color;
   transition: all 0.3s ease;
 
   & > * {
@@ -305,13 +304,12 @@ export default defineComponent({
 
   & .input,
   .search {
-    display: flex;
     box-sizing: border-box;
-    border: 0;
-
-    background: $dropdown-list-bg-color;
+    display: flex;
     color: $content-color;
     outline: none;
+    background: $dropdown-list-bg-color;
+    border: 0;
   }
 }
 
@@ -319,9 +317,52 @@ export default defineComponent({
   display: flex;
   width: 100%;
   max-height: 100%;
-
   border: 0.2em solid $container-border-color;
   border-radius: 1em;
+}
+
+.dropdown-list {
+  position: fixed;
+  z-index: 512;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  font-size: large;
+  pointer-events: none;
+  background-color: $dropdown-list-bg-color;
+  transition: all 0.3s ease;
+
+  & .input,
+  .search {
+    box-sizing: border-box;
+    display: flex;
+    margin: 0.75vh 0.5vw 0.25vh;
+    color: $content-color;
+    outline: none;
+    background: $dropdown-list-bg-color;
+    border: 0;
+  }
+
+  & .item {
+    box-sizing: border-box;
+    display: flex;
+    width: 90%;
+    padding: 0.25vh 0.5vw;
+    margin-bottom: 0.5vh;
+    color: $dropdown-list-item-color;
+    cursor: pointer;
+    user-select: none;
+    background-color: $dropdown-list-bg-color;
+    border-radius: 0.25em;
+    transition: all 0.2s ease;
+
+    &:hover,
+    &.selected {
+      color: $dropdown-list-item-hover-color;
+      background-color: $dropdown-list-bg-hover-color;
+    }
+  }
 }
 
 .dataset-list {
@@ -333,43 +374,34 @@ export default defineComponent({
 
   & > .search {
     display: flex;
-    background: $dropdown-list-bg-color;
+    padding: 0.25em 1em;
+    margin: 0.5em;
+    font-size: 1.25em;
     color: $content-color;
     outline: none;
-    font-size: 1.25em;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
-    border-radius: 0.25em;
-    margin: 0.5em 0.5em 0.5em 0.5em;
-    padding-left: 1em;
-    padding-right: 1em;
-    border-width: 0;
+    background: $dropdown-list-bg-color;
     border-color: $container-border-color;
+    border-width: 0;
     border-radius: 0.25em;
-
     transition: all 0.3s ease;
 
     &::placeholder {
-      color: lighten($content-color, 20%);
+      color: color.adjust($content-color, $lightness: 20%);
     }
   }
 
   & li {
-    cursor: pointer;
-    user-select: none;
     display: flex;
     justify-content: center;
-    list-style-type: none;
-    color: $content-color;
-    font-size: 1.25em;
     padding-top: 0.25em;
     padding-bottom: 0.25em;
+    margin: 0.1em 0.5em;
+    font-size: 1.25em;
+    color: $content-color;
+    cursor: pointer;
+    user-select: none;
+    list-style-type: none;
     border-radius: 0.25em;
-    margin-top: 0.1em;
-    margin-bottom: 0.1em;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
-
     transition: all 0.3s ease;
 
     &:hover,
@@ -384,7 +416,7 @@ export default defineComponent({
 
     & p {
       max-height: 1em;
-      margin: 0em;
+      margin: 0;
     }
 
     &.dropdown-active {
@@ -401,61 +433,6 @@ export default defineComponent({
         opacity: 0;
         transform: translateY(10em);
       }
-    }
-  }
-}
-
-.dropdown-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: fixed;
-  pointer-events: none;
-  z-index: 512;
-
-  margin-top: 10px;
-  background-color: $dropdown-list-bg-color;
-  transition: all 0.3s ease;
-  font-size: large;
-
-  & .input,
-  .search {
-    display: flex;
-    box-sizing: border-box;
-    margin-top: 0.75vh;
-    margin-bottom: 0.25vh;
-    margin-left: 0.5vw;
-    margin-right: 0.5vw;
-    border: 0;
-
-    background: $dropdown-list-bg-color;
-    color: $content-color;
-    outline: none;
-  }
-
-  & .item {
-    cursor: pointer;
-    user-select: none;
-
-    display: flex;
-    padding-top: 0.25vh;
-    padding-bottom: 0.25vh;
-    padding-left: 0.5vw;
-    padding-right: 0.5vw;
-    margin-bottom: 0.5vh;
-    width: 90%;
-    box-sizing: border-box;
-
-    border-radius: 0.25em;
-    color: $dropdown-list-item-color;
-    background-color: $dropdown-list-bg-color;
-
-    transition: all 0.2s ease;
-
-    &:hover,
-    &.selected {
-      background-color: $dropdown-list-bg-hover-color;
-      color: $dropdown-list-item-hover-color;
     }
   }
 }

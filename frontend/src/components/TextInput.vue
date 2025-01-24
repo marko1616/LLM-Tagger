@@ -80,15 +80,14 @@ export default defineComponent({
 
 .data-input-container {
   & .title {
-    cursor: pointer;
     display: flex;
-    user-select: none;
-    color: $content-color;
+    padding: 4px;
     font-family: sans-serif;
     font-size: 14px;
-    padding: 4px;
+    color: $content-color;
     text-align: center;
-
+    cursor: pointer;
+    user-select: none;
     transition: all 0.3s ease;
   }
 
@@ -104,39 +103,37 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-
-    background-color: #00000000;
-    border-color: #00000000;
-    color: $content-color;
-    border-radius: 5px;
-
     padding: 10px;
     margin-top: -40px;
+    color: $content-color;
+    background-color: #0000;
+    border-color: #0000;
+    border-radius: 5px;
   }
 
   .data-input {
-    width: 256px;
-    height: 64px;
     display: flex;
-    overflow: hidden;
-    caret-color: $content-color;
-    color: $content-color;
-    min-width: 256px;
-    max-width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    font-weight: 300;
-    text-wrap-mode: nowrap;
-    line-height: 1.2;
-    border: 1px solid $content-border-color;
-    border-radius: 5px;
-    background-color: $content-bg-color;
-    word-wrap: break-word;
-    min-height: 4vh;
-    outline: none;
     flex-direction: column;
     align-items: flex-start;
+    width: 256px;
+    min-width: 256px;
+    max-width: 100%;
+    height: 64px;
+    min-height: 4vh;
+    padding: 10px;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.2;
+    color: $content-color;
+    word-wrap: break-word;
+    caret-color: $content-color;
+    outline: none;
+    background-color: $content-bg-color;
+    border: 1px solid $content-border-color;
+    border-radius: 5px;
     transition: box-shadow 0.3s ease;
+    text-wrap-mode: nowrap;
 
     &:hover {
       border-color: $content-border-select-color;

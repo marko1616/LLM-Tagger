@@ -16,18 +16,19 @@ export default defineComponent({
 @use "@/styles/color.scss" as *;
 
 svg {
-  overflow: visible !important;
   position: absolute;
-  pointer-events: none;
   width: 100vw;
   height: 100vh;
+  overflow: visible !important;
+  pointer-events: none;
 
   path {
-    fill: none;
-    stroke-width: 5px;
-    stroke: $connection-color;
     pointer-events: auto;
+    fill: none;
+    stroke: $connection-color;
+    stroke-width: 5px;
     transition: stroke-width 0.3s ease;
+
     &:hover {
         stroke-width: 10px;
     }

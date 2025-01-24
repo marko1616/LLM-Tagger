@@ -111,14 +111,13 @@ export default defineComponent({
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 1024;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100vw;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   background-color: $main-bg-color;
-  z-index: 1024;
-
   animation: loading-out 1s ease-in-out forwards;
 }
 
@@ -133,25 +132,25 @@ export default defineComponent({
 }
 
 .loading-overlay1 {
-  background-color: $loading-overlay1-color;
   z-index: 512;
+  background-color: $loading-overlay1-color;
 }
 
 .loading-overlay2 {
-  background-color: $loading-overlay2-color;
   z-index: 256;
+  background-color: $loading-overlay2-color;
 }
 
 .loading-overlay3 {
-  background-color: $loading-overlay3-color;
   z-index: 128;
+  background-color: $loading-overlay3-color;
 }
 
 .loading-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 20px;
+  align-items: center;
 }
 
 .loading-text {
@@ -182,35 +181,39 @@ export default defineComponent({
     0% {
         stroke-dashoffset: 250;
     }
+
     50% {
         stroke-dashoffset: 0;
     }
+
     100% {
         stroke-dashoffset: 250;
     }
 }
 
 .slide-out {
-  animation: slideOut 1s forwards;
+  animation: slide-out 1s forwards;
 }
 
-@keyframes slideOut {
+@keyframes slide-out {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(100%);
   }
 }
 
 .slide-in {
-  animation: slideIn 1s forwards;
+  animation: slide-in 1s forwards;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }

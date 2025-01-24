@@ -72,54 +72,49 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use "@/styles/color.scss" as *;
+@use "sass:color";
 
 .login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: $container-bg-color;
-  border-radius: 2em;
-  border: 0.4em solid $container-border-color;
   justify-content: space-around;
-  height: 50%;
   width: 30%;
   min-width: min-content;
+  height: 50%;
+  background-color: $container-bg-color;
+  border: 0.4em solid $container-border-color;
+  border-radius: 2em;
 }
 
 .title {
-  font-weight: 900;
-  font-size: 3rem;
   padding: 1em;
+  font-size: 3rem;
+  font-weight: 900;
   color: $content-color;
 }
 
 .login-main {
   display: flex;
-  justify-content: center;
-  align-items: left;
   flex-direction: column;
-
+  align-items: left;
+  justify-content: center;
   padding-bottom: 1em;
 }
 
 .input {
-  background: $main-bg-color;
+  padding: 0.25em 1em;
+  margin: 0.5em;
+  font-size: xx-large;
   color: $content-color;
   outline: none;
-  font-size: xx-large;
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
-  border-radius: 0.25em;
-  margin: 0.5em 0.5em 0.5em 0.5em;
-  padding-left: 1em;
-  padding-right: 1em;
+  background: $main-bg-color;
   border: 0.1em solid $container-border-color;
   border-radius: 0.25em;
-
   transition: all 0.3s ease;
 
   &::placeholder {
-    color: lighten($content-color, 20%);
+    color: color.adjust($content-color, $lightness: 20%);
   }
 }
 
@@ -132,31 +127,28 @@ export default defineComponent({
 }
 
 .remember-label {
-  user-select: none;
   color: $content-color;
+  user-select: none;
 }
 
 .button-container {
   display: flex;
   justify-content: center;
-
   margin-top: 10%;
 }
 
 .button {
-  user-select: none;
   display: flex;
-  justify-content: center;
   align-items: center;
-  color: $button-color;
-  background-color: $button-bg-color;
-  font-size: xx-large;
-  letter-spacing: 0.25em;
-
-  border-radius: 0.5em;
-  height: 1.75em;
+  justify-content: center;
   width: 10em;
-
+  height: 1.75em;
+  font-size: xx-large;
+  color: $button-color;
+  letter-spacing: 0.25em;
+  user-select: none;
+  background-color: $button-bg-color;
+  border-radius: 0.5em;
   transition: all 0.3s ease;
 
   &:hover {
@@ -170,11 +162,11 @@ export default defineComponent({
 
 .fill-area {
   display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: $main-bg-color;
-  height: 100%;
+  justify-content: center;
   width: 100%;
+  height: 100%;
+  background-color: $main-bg-color;
 }
 
 .shake-animation {
@@ -185,12 +177,15 @@ export default defineComponent({
   0% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-1em);
   }
+
   75% {
     transform: translateX(1em);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -200,18 +195,17 @@ export default defineComponent({
 <style lang="scss">
 html, body {
   display: flex;
-
-  margin: 0;
-  padding: 0;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
 }
 
 #app {
   display: flex;
-  font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
+  font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
 }
 </style>

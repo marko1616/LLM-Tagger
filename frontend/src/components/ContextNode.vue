@@ -162,18 +162,16 @@ export default defineComponent({
 @use "@/styles/color.scss" as *;
 
 .node {
+  box-sizing: border-box;
   display: flex;
-
+  flex-direction: column;
+  gap: 10px;
   min-width: fit-content;
   min-height: fit-content;
+  padding: 8px;
   background-color: $container-bg-color;
   border: 2px solid $container-border-color;
   border-radius: 10px;
-  box-sizing: border-box;
-  padding: 8px;
-  flex-direction: column;
-  gap: 10px;
-
   transition: all 0.3s ease;
 
   & .title-container {
@@ -182,12 +180,12 @@ export default defineComponent({
 
   & .title {
     display: flex;
-    user-select: none;
-    color: $content-color;
+    padding: 4px;
     font-family: sans-serif;
     font-size: 18px;
-    padding: 4px;
+    color: $content-color;
     text-align: center;
+    user-select: none;
   }
 
   & .outputs,
@@ -208,9 +206,9 @@ export default defineComponent({
   & .output-title,
   & .input-title {
     display: flex;
-    color: white;
     font-family: sans-serif;
     font-size: 14px;
+    color: white;
   }
 
   & .output-socket,
