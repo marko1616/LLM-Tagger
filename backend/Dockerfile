@@ -17,8 +17,6 @@ RUN if [ "${USE_MIRROR}" = "true" ]; then \
 
 COPY ./api.py ./
 COPY ./config.json ./
-RUN mkdir -p datasets
-RUN mkdir -p uploads
 
 # Start backend
 EXPOSE 1080

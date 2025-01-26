@@ -73,7 +73,7 @@ export default defineComponent({
     async openItem(datasetName: string, itemName: string) {
       const response = await axios.get(`/datasets/${datasetName}/${itemName}`)
       await this.$router.push(`/edit/${datasetName}/${itemName}`)
-      this.$emit('openItem', response.data as DatasetItem)
+      this.$emit('openItem', response.data.item as DatasetItem)
     },
     openContextMenu(event: MouseEvent, types: string[], datasetName: string, itemName: string | null = null) {
       this.contextMenuOpened = true

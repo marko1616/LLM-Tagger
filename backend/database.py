@@ -5,8 +5,10 @@ from sqlalchemy import Column, Integer, String, LargeBinary, JSON
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+from schemas import Image, Dataset
+
 engine = create_engine("sqlite:///database.db")
-Base = declarative_base(engine)
+Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
 class ImageTable(Base):
@@ -14,7 +16,11 @@ class ImageTable(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    file_type = Column(String)
     data = Column(LargeBinary)
+
+    def as_image(self) -> Image:
+        return Image(id=self.id, name=self.name, file_type=self.file_type, data=self.data)
 
 class DatasetTable(Base):
     __tablename__ = "datasets"
@@ -24,53 +30,78 @@ class DatasetTable(Base):
     timestamp = Column(Integer)
     items = Column(JSON)
 
-@contextmanager
-def get_session():
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    def as_dataset(self) -> Dataset:
+        return Dataset(name=self.name, timestamp=self.timestamp, items=self.items)
 
-def init_db():
-    Base.metadata.create_all(engine)
+class Database:
+    @contextmanager
+    def get_session(self):
+        session = Session()
+        try:
+            yield session
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
-def create_image(name: str, data: bytes) -> ImageTable:
-    with get_session() as session:
-        image = ImageTable(name=name, data=data)
-        session.add(image)
-        return image
-def get_image_by_id(id: int) -> ImageTable:
-    with get_session() as session:
-        return session.query(ImageTable).filter_by(id=id).first()
+    def init_db(self):
+        Base.metadata.create_all(engine)
 
-def delete_image(image: ImageTable) -> None:
-    with get_session() as session:
-        session.delete(image)
+    def create_image(self, name: str, file_type: str, data: bytes) -> int:
+        with self.get_session() as session:
+            image = ImageTable(name=name, file_type=file_type, data=data)
+            session.add(image)
+            session.flush()
+            return image.id
+    def get_image_by_id(self, id: int) -> Image:
+        with self.get_session() as session:
+            return session.query(ImageTable).filter_by(id=id).first().as_image()
 
-def create_dataset(name: str, timestamp: int, items: dict) -> DatasetTable:
-    with get_session() as session:
-        dataset = DatasetTable(name=name, timestamp=timestamp, items=items)
-        session.add(dataset)
-        return dataset
+    def delete_image_by_id(self, id: id) -> None:
+        with self.get_session() as session:
+            image = session.query(ImageTable).filter_by(id=id).first()
+            session.delete(image)
+    
+    def list_datasets(self) -> list[str]:
+        with self.get_session() as session:
+            return [dataset.name for dataset in session.query(DatasetTable).all()]
 
-def get_dataset_by_id(id: int) -> DatasetTable:
-    with get_session() as session:
-        return session.query(DatasetTable).filter_by(id=id).first()
+    def create_dataset(self, name: str, timestamp: int, items: dict) -> DatasetTable:
+        with self.get_session() as session:
+            dataset = DatasetTable(name=name, timestamp=timestamp, items=items)
+            session.add(dataset)
+            return dataset
 
-def get_dataset_by_name(name: str) -> DatasetTable:
-    with get_session() as session:
-        return session.query(DatasetTable).filter_by(name=name).first()
+    def get_dataset_by_id(self, id: int) -> Dataset:
+        with self.get_session() as session:
+            return session.query(DatasetTable).filter_by(id=id).first().as_dataset()
 
-def update_dataset(dataset: DatasetTable, items: dict) -> None:
-    with get_session() as session:
-        dataset.items = items
-        session.add(dataset)
+    def get_dataset_by_name(self, name: str) -> Dataset:
+        with self.get_session() as session:
+            return session.query(DatasetTable).filter_by(name=name).first().as_dataset()
+        
+    def delete_dataset_by_id(self, id: int) -> None:
+        with self.get_session() as session:
+            dataset = session.query(DatasetTable).filter_by(id=id).first()
+            session.delete(dataset)
 
-def delete_dataset(dataset: DatasetTable) -> None:
-    with get_session() as session:
-        session.delete(dataset)
+    def delete_dataset_by_name(self, name: str) -> None:
+        with self.get_session() as session:
+            dataset = session.query(DatasetTable).filter_by(name=name).first()
+            session.delete(dataset)
+
+    def update_dataset_by_id(self, id: int, dataset: Dataset) -> None:
+        dataset = dataset.model_dump()
+        with self.get_session() as session:
+            dataset_table = session.query(DatasetTable).filter_by(id=id).first()
+            dataset_table.items = dataset["items"]
+            dataset_table.timestamp = dataset["timestamp"]
+
+    def update_dataset_by_name(self, name: str, dataset: Dataset) -> None:
+        dataset = dataset.model_dump()
+        with self.get_session() as session:
+            dataset_table = session.query(DatasetTable).filter_by(name=name).first()
+            dataset_table.items = dataset["items"]
+            dataset_table.timestamp = dataset["timestamp"]
