@@ -25,7 +25,7 @@ type NodeItem = {
   nodePosition: NodePosition
   nodeSize: NodeSize
   positive: string
-  negative?: string
+  negative: string | null
   to: number[]
 }
 
@@ -47,6 +47,7 @@ type Dataset = {
 
 type DatasetSummary = {
   name: string
+  searchQuery: string
   items: DatasetItemSummary[]
 }
 

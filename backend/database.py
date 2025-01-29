@@ -15,7 +15,7 @@ class ImageTable(Base):
     __tablename__ = "images"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     file_type = Column(String)
     data = Column(LargeBinary)
 

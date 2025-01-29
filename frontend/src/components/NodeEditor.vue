@@ -25,9 +25,6 @@ export default defineComponent({
     },
     openItem(item: DatasetItem) {
       this.editor?.openItem(item)
-    },
-    createUserAssistantPairs(): void {
-      this.editor?.createUserAssistantPairs()
     }
   }
 })

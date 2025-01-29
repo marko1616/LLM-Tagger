@@ -2,7 +2,7 @@
   <div class="dataset-panel">
     <simplebar>
       <ul class="dataset-list" ref="datasetListRef">
-        <input @input="(_event) => {flushDatasets(true)}" v-model="datasetFilterText" class="search" placeholder="Search item..." />
+        <input v-model="datasetSearchQuery" class="search" placeholder="Search item..." />
         <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
           <div class="dropdown-list" @click.stop>
             <input class="input" placeholder="Enter name" ref="createDatasetNameRef"/>
@@ -10,20 +10,22 @@
           </div>
           <p>Create new dataset</p>
         </li>
-        <li v-for="dataset in filteredDatasets" :key="dataset.name"
+        <li
+          v-for="datasetSummary in datasetSummaries.filter((dataset) => {return !datasetSearchQuery || dataset.name.toLocaleLowerCase().includes(datasetSearchQuery)})" :key="datasetSummary.name"
           @click="(event) => {flipDropdownState(event)}"
-          @contextmenu.prevent="openContextMenu($event, ['create', 'delete'], dataset.name)"
+          @contextmenu.prevent="openContextMenu($event, ['create', 'delete'], datasetSummary.name)"
           @click.stop>
           <div class="dropdown-list" @click.stop>
-            <input class="search" placeholder="Search item..." />
-            <div class="item" v-for="item in dataset.items" :key="item.name"
-            @click="openItem(dataset.name, item.name)"
-            @contextmenu.prevent.stop="openContextMenu($event, ['delete'], dataset.name, item.name)"
+            <input class="search" placeholder="Search item..." v-model="datasetSummary.searchQuery"/>
+            <div class="item"
+            v-for="item in datasetSummary.items.filter((item) => {return !datasetSummary.searchQuery || item.name.toLocaleLowerCase().includes(datasetSummary.searchQuery)})" :key="item.name"
+            @click="openItem(datasetSummary.name, item.name)"
+            @contextmenu.prevent.stop="openContextMenu($event, ['delete'], datasetSummary.name, item.name)"
             @click.stop>
               {{ item.name }}
             </div>
           </div>
-          <p>{{ dataset.name }}</p>
+          <p>{{ datasetSummary.name }}</p>
         </li>
       </ul>
     </simplebar>
@@ -99,46 +101,29 @@ export default defineComponent({
     closeContextMenu() {
       this.contextMenuOpened = false
     },
-    doCreateItem(itemName: string) {
-      axios.post(`/datasets/${this.contextMenuTargetDataset}/create`, {
-        name: itemName,
-        nodeItems: [
-          {
-            role: Role.SYSTEM,
-            nodePosition: {
-              x: 0,
-              y: 0
-            },
-            nodeSize: {
-              width: 256,
-              height: 64
-            },
-            positive: '',
-            negative: '',
-            to: []
+    async doCreateItem(itemName: string) {
+      await this.createItem(this.contextMenuTargetDataset, itemName)
+    },
+    async doDelete() {
+      try {
+        if (this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
+          if (confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
+            await axios.delete(`/datasets/${this.contextMenuTargetDataset}`);
+            this.flushDatasets();
           }
-        ]
-      }).then((_response) => {
-        this.flushDatasets()
-      })
-    },
-    doDelete() {
-      if(this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
-        if(confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
-          axios.delete(`/datasets/${this.contextMenuTargetDataset}`).then((_response) => {
-            this.flushDatasets()
-          })
+        } else if (this.contextMenuTargetType === ContextMenuTargetType.ITEM) {
+          if (confirm(`Are you sure you want to delete item ${this.contextMenuTargetItem} from dataset ${this.contextMenuTargetDataset}?`)) {
+            await axios.delete(`/datasets/${this.contextMenuTargetDataset}/${this.contextMenuTargetItem}`);
+            this.flushDatasets();
+          }
         }
-      } else if(this.contextMenuTargetType === ContextMenuTargetType.ITEM) {
-        if(confirm(`Are you sure you want to delete item ${this.contextMenuTargetItem} from dataset ${this.contextMenuTargetDataset}?`)) {
-          axios.delete(`/datasets/${this.contextMenuTargetDataset}/${this.contextMenuTargetItem}`).then((_response) => {
-            this.flushDatasets()
-          })
-        }
+      } catch (error) {
+        console.error('Error deleting:', error);
+      } finally {
+        this.closeContextMenu();
       }
-      this.closeContextMenu()
     },
-    createItem(datasetName: string, itemName: string) {
+    async createItem(datasetName: string, itemName: string) {
       const item: DatasetItem = {
         name: itemName,
         nodeItems: [
@@ -159,9 +144,9 @@ export default defineComponent({
         ]
       }
 
-      axios.post(`/datasets/${datasetName}/create`, item).then((_response) => {
-        this.flushDatasets()
-      })
+      await axios.post(`/datasets/${datasetName}/create`, item)
+      this.flushDatasets()
+      this.$router.push(`/edit/${datasetName}/${itemName}`)
     },
     createDataset(name: string) {
       const dataset: Dataset = {
@@ -177,26 +162,16 @@ export default defineComponent({
 
       this.foldDropdowns()
     },
-    async flushDatasets(cache?: boolean) {
-      if (cache) {
-        this.filteredDatasets.length = 0
-        this.datasetsCache.forEach((dataset) => {
-          if (dataset.name.toLocaleLowerCase().includes(this.datasetFilterText)) {
-            this.filteredDatasets.push(dataset)
-          }
-        })
-        return
-      }
-
+    async flushDatasets() {
       try {
         const response = await axios.get('/datasets/list')
-        this.datasetsCache.length = 0
-        this.filteredDatasets.length = 0
+        this.datasetSummaries.length = 0
 
         const datasetPromises = response.data.datasets.map(async (datasetName: string) => {
           const datasetResponse = await axios.get(`/datasets/${datasetName}/list`)
           return {
             name: datasetName,
+            searchQuery: '',
             items: datasetResponse.data.items.map((itemName: string) => ({ name: itemName }))
           }
         })
@@ -204,10 +179,7 @@ export default defineComponent({
         const datasets = await Promise.all(datasetPromises)
 
         datasets.forEach((dataset) => {
-          this.datasetsCache.push(dataset)
-          if (dataset.name.toLocaleLowerCase().includes(this.datasetFilterText)) {
-            this.filteredDatasets.push(dataset)
-          }
+          this.datasetSummaries.push(dataset)
         })
       } catch (error) {
         console.error('Error fetching datasets:', error)
@@ -251,22 +223,20 @@ export default defineComponent({
     document.removeEventListener('click', this.globalClick)
   },
   setup() {
-    const datasetsCache: DatasetSummary[] = []
+    const datasetSummaries = ref<DatasetSummary[]>([])
     const datasetListRef = ref<HTMLElement | null>(null)
     const datasetDroppedDown = ref(false)
-    const filteredDatasets = ref<DatasetSummary[]>([])
-    const datasetFilterText = ref('')
+    const datasetSearchQuery = ref('')
     const contextMenuOpened = ref(false)
     const contextMenuTypes = ref<string[]>([])
     const contextMenuTargetType = ref<string>(ContextMenuTargetType.DATASET)
     const contextMenuTargetDataset = ref<string>('')
     const contextMenuTargetItem = ref<string|null>(null)
     return {
-      datasetsCache,
-      datasetFilterText,
+      datasetSummaries,
+      datasetSearchQuery,
       datasetListRef,
       datasetDroppedDown,
-      filteredDatasets,
       contextMenuOpened,
       contextMenuTypes,
       contextMenuTargetType,

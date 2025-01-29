@@ -10,10 +10,10 @@ import Connection from './NodeConnection.vue'
 import Socket from './NodeSocket.vue'
 
 import {PromptTextInput} from './TextInput'
+import {editingState} from './NodeEditorStore'
 import TextInputControl from './TextInput.vue'
 
 import { DatasetItem, NodeSize, Role } from '@/types/dataset'
-
 import '@/styles/editorbg.scss'
 
 type ContextMenuItem = {
@@ -158,6 +158,9 @@ export class ReteEditor {
     window.addEventListener('keydown', this.handleKeyDown)
     this.area.addPipe(event => {
       // Remove all selected nodes on key delete.
+      if (event.type in ['noderemoved', 'nodecreated', 'noderesized', 'nodetranslated']) {
+        editingState.saved = false
+      }
       if (event.type === 'keydelete') {
         this.editor.getNodes().forEach(node => {
           if(node.selected) {
@@ -286,9 +289,9 @@ export class ReteEditor {
             nodePosition: {x, y},
             nodeSize: {width, height},
             positive: positivePrompt,
+            negative: null,
             to: to
           })
-          console.log(datasetItem)
           break
         }
         case 'Input-User': {
@@ -305,6 +308,7 @@ export class ReteEditor {
             nodePosition: {x, y},
             nodeSize: {width, height},
             positive: positivePrompt,
+            negative: null,
             to: to
           })
           break
@@ -323,6 +327,7 @@ export class ReteEditor {
             nodePosition: {x, y},
             nodeSize: {width, height},
             positive: positivePrompt,
+            negative: null,
             to: to
           })
           break
@@ -349,6 +354,7 @@ export class ReteEditor {
         }
       }
     })
+    return datasetItem
   }
 
   async openItem(item: DatasetItem) {

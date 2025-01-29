@@ -20,12 +20,15 @@
 
 <script lang="ts">
 import {ref, toRef, defineComponent} from 'vue'
+import axios from 'axios'
 
-import NodeEditor from '@/components/NodeEditor.vue'
 import { openOuterEditor, editingControl } from '@/components/NodeEditorStore'
 import { DatasetItem } from '@/types/dataset'
+import { editingState } from '@/components/NodeEditorStore'
+import NodeEditor from '@/components/NodeEditor.vue'
 import TextEditor from '@/components/TextEditor.vue'
 import DatasetPanel from '@/components/DatasetPanel.vue'
+import router from '@/router'
 
 export default defineComponent({
   components: {
@@ -58,23 +61,29 @@ export default defineComponent({
     const nodeEditorRef = ref<typeof NodeEditor | null>(null)
     const editingTextRef = toRef(editingControl, 'data')
 
-    const createUserAssistantPairs = () => {
-      nodeEditorRef.value?.createUserAssistantPairs()
-    }
-
     const updateText = (text: string) => {
       editingControl.data = text
     }
 
-    const ctrlSaveHandler = (event: KeyboardEvent) => {
+    const ctrlSaveHandler = async (event: KeyboardEvent) => {
       if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
-        nodeEditorRef.value?.exportDatasetItem()
-        event.preventDefault();
+        event.preventDefault()
+        const datasetItem: DatasetItem = nodeEditorRef.value?.exportDatasetItem()
+        const pathPart = router.currentRoute.value.path.split('/')
+        if(pathPart.length === 4) {
+          // Save
+          const datasetName = pathPart[2]
+          const itemName = pathPart[3]
+          await axios.put(`/datasets/${datasetName}/${itemName}`, datasetItem)
+          editingState.saved = true
+        } else {
+          // Save as new
+
+        }
       }
     }
 
     return {
-      createUserAssistantPairs,
       nodeEditorRef,
       isEditorVisible,
       editingTextRef,
