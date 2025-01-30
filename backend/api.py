@@ -159,8 +159,9 @@ async def update_dataset_item(
     Updates a dataset item.
     """
     dataset = db.get_dataset_by_name(dataset_name)
-    for i, item in enumerate(dataset.items):
-        if item.name == item_name:
+    item.name = item_name
+    for i, orig_item in enumerate(dataset.items):
+        if orig_item.name == item_name:
             dataset.items[i] = item
             db.update_dataset_by_name(dataset_name, dataset)
             return JSONResponse({"message": "Dataset item updated"})

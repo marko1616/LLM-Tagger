@@ -6,7 +6,7 @@
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
-        <DatasetPanel @openItem="openItem"/>
+        <DatasetPanel @openItem="openItem" @saveCurrentItem="saveCurrentItem"/>
       </div>
       <footer>
         <p>
@@ -28,7 +28,6 @@ import { editingState } from '@/components/NodeEditorStore'
 import NodeEditor from '@/components/NodeEditor.vue'
 import TextEditor from '@/components/TextEditor.vue'
 import DatasetPanel from '@/components/DatasetPanel.vue'
-import router from '@/router'
 
 export default defineComponent({
   components: {
@@ -45,6 +44,23 @@ export default defineComponent({
     },
     closeEditor() {
       this.isEditorVisible = false
+    },
+    async ctrlSaveHandler (event: KeyboardEvent) {
+      if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
+        event.preventDefault()
+        const pathPart = this.$router.currentRoute.value.path.split('/')
+        if(pathPart.length === 4) {
+          // Save
+          const datasetName = pathPart[2]
+          const itemName = pathPart[3]
+          await this.saveCurrentItem(datasetName, itemName)
+        }
+      }
+    },
+    async saveCurrentItem(datasetName: string, itemName: string) {
+      const datasetItem: DatasetItem = this.nodeEditorRef?.exportDatasetItem()
+      await axios.put(`/datasets/${datasetName}/${itemName}`, datasetItem)
+      editingState.saved = true
     }
   },
   mounted() {
@@ -65,30 +81,11 @@ export default defineComponent({
       editingControl.data = text
     }
 
-    const ctrlSaveHandler = async (event: KeyboardEvent) => {
-      if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
-        event.preventDefault()
-        const datasetItem: DatasetItem = nodeEditorRef.value?.exportDatasetItem()
-        const pathPart = router.currentRoute.value.path.split('/')
-        if(pathPart.length === 4) {
-          // Save
-          const datasetName = pathPart[2]
-          const itemName = pathPart[3]
-          await axios.put(`/datasets/${datasetName}/${itemName}`, datasetItem)
-          editingState.saved = true
-        } else {
-          // Save as new
-
-        }
-      }
-    }
-
     return {
       nodeEditorRef,
       isEditorVisible,
       editingTextRef,
       updateText,
-      ctrlSaveHandler
     }
   }
 })
@@ -132,6 +129,8 @@ a:active {
   display: flex;
   flex: 1;
   flex-direction: column;
+  min-width: 20em;
+  max-width: 10vw;
   max-height: 100%;
   padding: 16px;
   padding-right: 1vw;
@@ -145,7 +144,6 @@ a:active {
 .sidebar-main-panel {
   display: flex;
   flex-grow: 1;
-  overflow: hidden;
 }
 
 .sidebar-buttom-panel {

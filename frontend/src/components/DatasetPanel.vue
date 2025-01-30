@@ -1,55 +1,64 @@
 <template>
   <div class="dataset-panel">
-    <simplebar>
-      <ul class="dataset-list" ref="datasetListRef">
-        <input v-model="datasetSearchQuery" class="search" placeholder="Search item..." />
-        <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
-          <div class="dropdown-list" @click.stop>
-            <input class="input" placeholder="Enter name" ref="createDatasetNameRef"/>
-            <div class="item create" @click="() => {createDataset($refs.createDatasetNameRef.value)}">Do create</div>
-          </div>
-          <p>Create new dataset</p>
-        </li>
-        <li
-          v-for="datasetSummary in datasetSummaries.filter((dataset) => {return !datasetSearchQuery || dataset.name.toLocaleLowerCase().includes(datasetSearchQuery)})" :key="datasetSummary.name"
-          @click="(event) => {flipDropdownState(event)}"
-          @contextmenu.prevent="openContextMenu($event, ['create', 'delete'], datasetSummary.name)"
-          @click.stop>
-          <div class="dropdown-list" @click.stop>
-            <input class="search" placeholder="Search item..." v-model="datasetSummary.searchQuery"/>
-            <div class="item"
-            v-for="item in datasetSummary.items.filter((item) => {return !datasetSummary.searchQuery || item.name.toLocaleLowerCase().includes(datasetSummary.searchQuery)})" :key="item.name"
-            @click="openItem(datasetSummary.name, item.name)"
-            @contextmenu.prevent.stop="openContextMenu($event, ['delete'], datasetSummary.name, item.name)"
-            @click.stop>
-              {{ item.name }}
+    <div class="list-container">
+      <simplebar>
+        <ul class="dataset-list" ref="datasetListRef">
+          <input v-model="datasetSearchQuery" class="search" placeholder="Search item..." />
+          <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
+            <div class="dropdown-list" @click.stop>
+              <input class="input" placeholder="Enter name"/>
+              <div class="item create" @click="(event) => {createDataset(((event.target as HTMLDivElement).previousElementSibling as HTMLInputElement).value)}">Do create</div>
             </div>
-          </div>
-          <p>{{ datasetSummary.name }}</p>
-        </li>
-      </ul>
-    </simplebar>
-    <transition name="context-menu"><div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
-      <input class="input" placeholder="Enter new item name" ref="createItemNameRef" v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'"/>
-      <div class="item"
-        @click="() => {doCreateItem($refs.createItemNameRef.value)}"
-        @click.stop
-        v-show="contextMenuTypes.includes('create') && contextMenuTargetType === 'dataset'">
-        Create item
-      </div>
-      <div class="item"
-        @click="() => {doDelete()}"
-        @click.stop
-        v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'dataset'">
-        Delete dataset
-      </div>
-      <div class="item"
-        @click="() => {doDelete()}"
-        @click.stop
-        v-show="contextMenuTypes.includes('delete') && contextMenuTargetType == 'item'">
-        Delete item
-      </div>
-    </div></transition>
+            <p>Create new dataset</p>
+          </li>
+          <li
+            v-for="datasetSummary in datasetSummaries.filter((dataset) => {return !datasetSearchQuery || dataset.name.toLocaleLowerCase().includes(datasetSearchQuery)})" :key="datasetSummary.name"
+            @click="(event) => {flipDropdownState(event)}"
+            @contextmenu.prevent="openContextMenu($event, datasetSummary.name)"
+            @click.stop>
+            <p @click="() => datasetSummary.show = !datasetSummary.show">{{ datasetSummary.name }}</p>
+            <transition name="item-list"><ul class="item-list" v-show="datasetSummary.show">
+              <input v-model="datasetSummary.searchQuery" class="search" placeholder="Search item..."/>
+              <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
+                <div class="dropdown-list" @click.stop>
+                  <input class="input" placeholder="Enter name"/>
+                  <div class="item create" @click="(event: MouseEvent) => {createItem(datasetSummary.name,((event.target as HTMLDivElement).previousElementSibling as HTMLInputElement).value)}">Do create</div>
+                </div>
+                <p>Create new item</p>
+              </li>
+              <li class="item"
+              v-for="item in datasetSummary.items.filter((item) => {return !datasetSummary.searchQuery || item.name.toLocaleLowerCase().includes(datasetSummary.searchQuery)})" :key="item.name"
+              :dataset-name="datasetSummary.name"
+              :item-name="item.name"
+              @click="selectItem(datasetSummary.name, item.name)"
+              @dblclick="openItem(datasetSummary.name, item.name)"
+              @contextmenu.prevent.stop="openContextMenu($event, datasetSummary.name, item.name)"
+              @click.stop>
+                {{ item.name }}
+              </li>
+            </ul></transition>
+          </li>
+        </ul>
+      </simplebar>
+      <transition name="context-menu"><div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
+        <div class="item"
+          @click="() => {doDelete()}"
+          @click.stop
+          v-show="contextMenuTargetType == 'dataset'">
+          Delete dataset
+        </div>
+        <div class="item"
+          @click="() => {doDelete()}"
+          @click.stop
+          v-show="contextMenuTargetType == 'item'">
+          Delete item
+        </div>
+      </div></transition>
+    </div>
+    <div class="btn-container">
+      <button @click="saveHandler">Save</button>
+      <button @click="saveAsHandler">Save as selected</button>
+    </div>
   </div>
 </template>
 
@@ -62,6 +71,11 @@ import { ContextMenuTargetType, Role, DatasetItem, Dataset, DatasetSummary } fro
 import simplebar from 'simplebar-vue'
 import 'simplebar-vue/dist/simplebar.min.css'
 
+type SelectedItem = {
+  datasetName: string | null,
+  itemName: string | null
+}
+
 export default defineComponent({
   components: {
     simplebar
@@ -69,7 +83,10 @@ export default defineComponent({
   emits: {
     'openItem': (_dataset: DatasetItem) => {
       return true
-    } 
+    },
+    'saveCurrentItem': (_datasetName: string, _itemName: string) => {
+      return true
+    }
   },
   methods: {
     async openItem(datasetName: string, itemName: string) {
@@ -77,9 +94,37 @@ export default defineComponent({
       await this.$router.push(`/edit/${datasetName}/${itemName}`)
       this.$emit('openItem', response.data.item as DatasetItem)
     },
-    openContextMenu(event: MouseEvent, types: string[], datasetName: string, itemName: string | null = null) {
+    saveHandler() {
+      const pathPart = this.$router.currentRoute.value.path.split('/')
+      if(pathPart.length === 4) {
+        const datasetName = pathPart[2]
+        const itemName = pathPart[3]
+        this.$emit('saveCurrentItem', datasetName, itemName)
+      }
+    },
+    saveAsHandler() {
+      if(!this.selectedItem.datasetName || !this.selectedItem.itemName) {
+        return
+      }
+      this.$emit('saveCurrentItem', this.selectedItem.datasetName, this.selectedItem.itemName)
+    },
+    selectItem(datasetName: string, itemName: string) {
+      this.datasetListRef?.querySelectorAll('.dataset-list > li:not(.create)').forEach((element) => {
+        (element as HTMLElement).querySelectorAll('li:not(.create)').forEach((element) => {
+          if(element.getAttribute('dataset-name') === datasetName && element.getAttribute('item-name') === itemName) {
+            element.classList.add('selected')
+          } else {
+            element.classList.remove('selected')
+          }
+        })
+      })
+      this.selectedItem = {
+        datasetName: datasetName,
+        itemName: itemName
+      }
+    },
+    openContextMenu(event: MouseEvent, datasetName: string, itemName: string | null = null) {
       this.contextMenuOpened = true
-      this.contextMenuTypes = types
       new Promise((_resolve) => {
         if(this.$refs.contextMenuRef instanceof HTMLElement) {
           this.$refs.contextMenuRef.style.left = `${event.clientX}px`
@@ -100,9 +145,6 @@ export default defineComponent({
     },
     closeContextMenu() {
       this.contextMenuOpened = false
-    },
-    async doCreateItem(itemName: string) {
-      await this.createItem(this.contextMenuTargetDataset, itemName)
     },
     async doDelete() {
       try {
@@ -146,7 +188,6 @@ export default defineComponent({
 
       await axios.post(`/datasets/${datasetName}/create`, item)
       this.flushDatasets()
-      this.$router.push(`/edit/${datasetName}/${itemName}`)
     },
     createDataset(name: string) {
       const dataset: Dataset = {
@@ -171,6 +212,7 @@ export default defineComponent({
           const datasetResponse = await axios.get(`/datasets/${datasetName}/list`)
           return {
             name: datasetName,
+            show: false,
             searchQuery: '',
             items: datasetResponse.data.items.map((itemName: string) => ({ name: itemName }))
           }
@@ -228,20 +270,23 @@ export default defineComponent({
     const datasetDroppedDown = ref(false)
     const datasetSearchQuery = ref('')
     const contextMenuOpened = ref(false)
-    const contextMenuTypes = ref<string[]>([])
     const contextMenuTargetType = ref<string>(ContextMenuTargetType.DATASET)
     const contextMenuTargetDataset = ref<string>('')
     const contextMenuTargetItem = ref<string|null>(null)
+    const selectedItem = ref<SelectedItem>({
+      datasetName: null,
+      itemName: null
+    })
     return {
       datasetSummaries,
       datasetSearchQuery,
       datasetListRef,
       datasetDroppedDown,
-      contextMenuOpened,
-      contextMenuTypes,
       contextMenuTargetType,
+      contextMenuOpened,
       contextMenuTargetDataset,
       contextMenuTargetItem,
+      selectedItem
     }
   }
 })
@@ -251,10 +296,62 @@ export default defineComponent({
 @use "@/styles/color.scss" as *;
 @use "sass:color";
 
+.dataset-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.list-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  border: 0.2em solid $container-border-color;
+  border-radius: 1em;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: space-evenly;
+  margin: 0.25em;
+
+  & button {
+    width: 10em;
+    padding: 0.25em;
+    color: $content-color-dark;
+    background-color: $button-bg-color;
+    border: 0;
+    border-radius: 0.25em;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: $button-hover-bg-color;
+    }
+  }
+}
+
 .context-menu-enter-from,
 .context-menu-leave-to  {
   opacity: 0;
   transform: translateY(2em);
+}
+
+.item-list-enter-from,
+.item-list-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.item-list-enter-to,
+.item-list-leave-from {
+  max-height: 100vh;
+  opacity: 1;
+}
+
+.item-list-enter-active,
+.item-list-leave-active {
+  transition: all 0.3s ease;
 }
 
 .context-menu {
@@ -272,7 +369,6 @@ export default defineComponent({
     margin: 0.25em;
   } 
 
-  & .input,
   .search {
     box-sizing: border-box;
     display: flex;
@@ -281,14 +377,6 @@ export default defineComponent({
     background: $dropdown-list-bg-color;
     border: 0;
   }
-}
-
-.dataset-panel {
-  display: flex;
-  width: 100%;
-  max-height: 100%;
-  border: 0.2em solid $container-border-color;
-  border-radius: 1em;
 }
 
 .dropdown-list {
@@ -325,7 +413,7 @@ export default defineComponent({
     user-select: none;
     background-color: $dropdown-list-bg-color;
     border-radius: 0.25em;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 
     &:hover,
     &.selected {
@@ -335,7 +423,77 @@ export default defineComponent({
   }
 }
 
-.dataset-list {
+.item-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+
+  & p {
+    display: flex;
+    justify-content: center;
+  }
+
+  & > li {
+    display: flex;
+    margin: 0.25rem 0.5rem;
+    list-style-type: none;
+    border-radius: 0.25rem;
+    transition: background 0.3s ease;
+
+    &:hover,
+    &.selected {
+      color: $content-color-dark;
+      background: $list-level2-selected-color;
+    }
+
+    & > .dropdown-list {
+      padding-left: 0;
+      transform: translateX(-0.5rem);
+    }
+
+    &.dropdown-active {
+      & > .dropdown-list {
+        pointer-events: all;
+        opacity: 1;
+        transform: translateY(1em);
+      }
+    }
+
+    &:not(.dropdown-active) {
+      & > .dropdown-list {
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(10em);
+      }
+    }
+  }
+
+  & > * {
+    padding-left: 1rem;
+  }
+
+  & .search {
+    display: flex;
+    padding: 0.1rem 1rem;
+    margin: 0.5rem;
+    font-size: 1.25rem;
+    color: $content-color;
+    outline: none;
+    background: $dropdown-list-bg-color;
+    border-color: $container-border-color;
+    border-width: 0;
+    border-radius: 0.25rem;
+  }
+}
+
+/**
+ * The `not(.item-list)` selector is used to prevent potential conflicts
+ * and undefined behavior with `.item-list`. Although `.item-list` and
+ * the current context cannot appear simultaneously, this exclusion is
+ * necessary to satisfy the linter's requirements and ensure code
+ * consistency.
+ */
+.dataset-list:not(.item-list) {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -360,8 +518,9 @@ export default defineComponent({
     }
   }
 
-  & li {
+  & > li {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     padding-top: 0.25em;
     padding-bottom: 0.25em;
@@ -374,10 +533,14 @@ export default defineComponent({
     border-radius: 0.25em;
     transition: all 0.3s ease;
 
+    & > * {
+      padding-left: 1em;
+    }
+
     &:hover,
     &.selected {
       color: $content-color-dark;
-      background: $dropdown-btn-bg-color;
+      background: $list-level1-selected-color;
     }
 
     & .item-padding {
@@ -389,11 +552,15 @@ export default defineComponent({
       margin: 0;
     }
 
+    & > .dropdown-list {
+      padding-left: 0;
+    }
+
     &.dropdown-active {
       & > .dropdown-list {
         pointer-events: all;
         opacity: 1;
-        transform: translateY(2em);
+        transform: translateY(2.5em);
       }
     }
 

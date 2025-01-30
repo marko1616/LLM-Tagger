@@ -47,6 +47,7 @@ type Dataset = {
 
 type DatasetSummary = {
   name: string
+  show: boolean
   searchQuery: string
   items: DatasetItemSummary[]
 }
