@@ -44,28 +44,28 @@ export default defineComponent({
 @use "@/styles/color.scss" as *;
 
 [rete-context-menu] {
-  box-sizing: border-box;
-  min-width: max-content;
-  background: $container-bg-color;
-  border: 2px solid $container-border-color;
-  border-radius: 10px;
-  transition: border-color 0.3s ease;
+  box-sizing: border-box !important;
+  min-width: max-content !important;
+  background: $container-bg-color !important;
+  border: 2px solid $container-border-color !important;
+  border-radius: 10px !important;
+  transition: border-color 0.3s ease !important;
 
   &:hover {
-    border-color: $container-border-hover-color;
+    border-color: $container-border-hover-color !important;
   }
 
   .block {
-    display: flex;
-    align-items: center;
-    background: $container-bg-color;
-    border: 0;
-    border-radius: 0.5vw;
-    transition: background 0.2s ease;
+    display: flex !important;
+    align-items: center !important;
+    background: $container-bg-color !important;
+    border: 0 !important;
+    border-radius: 0.5vw !important;
+    transition: background 0.2s ease !important;
 
     &.item {
-      cursor: pointer;
-      border: 0.1vw solid transparent;
+      cursor: pointer !important;
+      border: 0.1vw solid transparent !important;
     }
 
     &:hover {
@@ -75,28 +75,28 @@ export default defineComponent({
     }
 
     &:focus-visible {
-      outline: 0;
+      outline: 0 !important;
     }
   }
 
   .block:first-child input {
-    width: 100%;
-    color: $content-color;
-    outline: none;
-    background: $container-input-bg-color;
-    border: 2px solid $container-border-color;
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    width: 100% !important;
+    color: $content-color !important;
+    outline: none !important;
+    background: $container-input-bg-color !important;
+    border: 2px solid $container-border-color !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
 
     &:focus {
-      background: $container-bg-hover-color;
-      border-color: $container-border-hover-color;
+      background: $container-bg-hover-color !important;
+      border-color: $container-border-hover-color !important;
     }
   }
 
   .search {
-    font-size: 1.4vh;
-    color: $content-color;
+    font-size: 1.4vh !important;
+    color: $content-color !important;
   }
 }
 </style>

@@ -5,9 +5,9 @@ from sqlalchemy import Column, Integer, String, LargeBinary, JSON
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from schemas import Image, Dataset
+from .schemas import Image, Dataset
 
-engine = create_engine("sqlite:///database.db")
+engine = create_engine("sqlite:///volume/database.db")
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 

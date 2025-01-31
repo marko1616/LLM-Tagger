@@ -5,8 +5,8 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import Database
-from schemas import Config, Dataset, DatasetItem
+from .database import Database
+from .schemas import Config, Dataset, DatasetItem
 
 def load_config() -> Config:
     """
@@ -182,14 +182,3 @@ async def delete_dataset_item(dataset_name: str, item_name: str) -> JSONResponse
             db.update_dataset_by_name(dataset_name, dataset)
             return JSONResponse({"message": "Dataset item deleted"})
     return JSONResponse({"message": "Dataset item not found"}, status_code=404)
-
-
-if __name__ == "__main__":
-    import uvicorn
-    db.init_db()
-    uvicorn.run(
-        "api:app",
-        host=config.listen.split(":")[0],
-        port=int(config.listen.split(":")[1]),
-        reload=True,
-    )

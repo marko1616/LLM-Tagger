@@ -9,8 +9,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./backend/datasets:/app/datasets
-      - ./backend/uploads:/app/uploads
+      - ./backend/volume:/app/volume
 
   nginx:
     image: nginx:latest

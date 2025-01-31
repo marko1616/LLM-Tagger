@@ -15,9 +15,10 @@ RUN if [ "${USE_MIRROR}" = "true" ]; then \
         pip install --no-cache-dir -r requirements.txt; \
     fi
 
-COPY ./api.py ./
-COPY ./config.json ./
-
 # Start backend
+FROM python:3.13-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY . .
 EXPOSE 1080
-CMD ["python", "api.py"]
+CMD ["python", "-m", "src.main"]

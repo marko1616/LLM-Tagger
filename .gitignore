@@ -3,7 +3,7 @@
 /frontend/dist
 /frontend/public/config.json
 
-/backend/database.db
+/backend/volume/database.db
 /backend/config.json
 
 # local env files
