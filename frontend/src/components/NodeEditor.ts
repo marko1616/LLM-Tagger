@@ -96,6 +96,17 @@ export class ReteEditor {
           defaultMenu.list.push(createUserAssistantPairs)
         }
 
+        if(context instanceof ClassicPreset.Node) {
+          if(context.label !== 'Input-System') {
+            const cloneNode: ContextMenuItem = {
+              label: 'Clone Node',
+              key: 'cloneNode',
+              handler: (async () => this.cloneNode(context.id, area.area.pointer))
+            }
+            defaultMenu.list.push(cloneNode)
+          }
+        }
+
         return defaultMenu
       }
     })
@@ -219,7 +230,46 @@ export class ReteEditor {
     return this.area.nodeViews.get(id)?.position
   }
 
-  async createUserAssistantPairs(position: Position | null = null) {
+  async cloneNode(id: string, to?: Position) {
+    const origNode = this.getNode(id)
+    if(!origNode) {
+      return
+    }
+    if(origNode.hasControl('TextInput')) {
+      // Clone non pairwise node
+      const label = origNode.label
+      const prompt = (origNode.controls['TextInput'] as PromptTextInput).data.value
+      const size = (origNode.controls['TextInput'] as PromptTextInput).size
+      switch(label) {
+        case 'Input-System': {
+          // Can't clone root node
+          return
+        }
+        case 'Input-User': {
+          const node = this.userNodeFactory(prompt, size)
+          await this.editor.addNode(node)
+          await this.area.translate(node.id, to ?? {x: 0, y: 0})
+          break
+        }
+        case 'Input-Assistant': {
+          const node = this.assistantNodeFactory(prompt, size)
+          await this.editor.addNode(node)
+          await this.area.translate(node.id, to ?? {x: 0, y: 0})
+          break
+        }
+      }
+    } else {
+      // Clone pairwise node
+      const promptPositive = (origNode.controls['TextInputPositive'] as PromptTextInput).data.value
+      const promptNegative = (origNode.controls['TextInputNegative'] as PromptTextInput).data.value
+      const size = (origNode.controls['TextInputPositive'] as PromptTextInput).size
+      const node = this.assistantPairwiseNodeFactory(promptPositive, promptNegative, size)
+      await this.editor.addNode(node)
+      await this.area.translate(node.id, to ?? {x: 0, y: 0})
+    }
+  }
+
+  async createUserAssistantPairs(position?: Position) {
     const userNode = this.userNodeFactory()
     const assistantNode = this.assistantNodeFactory()
     await this.editor.addNode(userNode)
@@ -234,14 +284,14 @@ export class ReteEditor {
 
   systemNodeFactory(prompt?: string, size?: NodeSize) {
     const systemNode = new ClassicPreset.Node('Input-System')
-    systemNode.addControl('TextInput', new PromptTextInput('System', prompt, this.gettextareaResizeCallback(systemNode.id), size))
+    systemNode.addControl('TextInput', new PromptTextInput('System', prompt, size, this.gettextareaResizeCallback(systemNode.id)))
     systemNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     return systemNode
   }
 
   userNodeFactory(prompt?: string, size?: NodeSize) {
     const userNode = new ClassicPreset.Node('Input-User')
-    userNode.addControl('TextInput', new PromptTextInput('User', prompt, this.gettextareaResizeCallback(userNode.id), size))
+    userNode.addControl('TextInput', new PromptTextInput('User', prompt, size, this.gettextareaResizeCallback(userNode.id)))
     userNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     userNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return userNode
@@ -249,7 +299,7 @@ export class ReteEditor {
 
   assistantNodeFactory(prompt?: string, size?: NodeSize) {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, this.gettextareaResizeCallback(assistantNode.id), size))
+    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, size, this.gettextareaResizeCallback(assistantNode.id)))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
@@ -257,8 +307,8 @@ export class ReteEditor {
 
   assistantPairwiseNodeFactory(promptPositive?: string, promptNegative?: string, size?: NodeSize) {
     const assistantPairwiseNode = new ClassicPreset.Node('Input-Assistant-Pairwise')
-    assistantPairwiseNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', promptPositive, this.gettextareaResizeCallback(assistantPairwiseNode.id), size))
-    assistantPairwiseNode.addControl('TextInputNegative', new PromptTextInput('Assistant negative', promptNegative, this.gettextareaResizeCallback(assistantPairwiseNode.id), size))
+    assistantPairwiseNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', promptPositive, size, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
+    assistantPairwiseNode.addControl('TextInputNegative', new PromptTextInput('Assistant negative', promptNegative, size, this.gettextareaResizeCallback(assistantPairwiseNode.id)))
     assistantPairwiseNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantPairwiseNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantPairwiseNode
@@ -273,8 +323,8 @@ export class ReteEditor {
     const datasetItem: DatasetItem = {name:'', nodeItems:[]}
     const nodes = this.getNodes()
     nodes.forEach(node => {
-      const title = node.label
-      switch(title) {
+      const label = node.label
+      switch(label) {
         case 'Input-System': {
           const positivePrompt = (node.controls['TextInput'] as UnwrapRef<PromptTextInput>).data
           const {width, height} = (node.controls['TextInput'] as PromptTextInput).size 

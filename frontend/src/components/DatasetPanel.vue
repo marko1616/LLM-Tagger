@@ -91,8 +91,9 @@ export default defineComponent({
   methods: {
     async openItem(datasetName: string, itemName: string) {
       const response = await axios.get(`/datasets/${datasetName}/${itemName}`)
-      await this.$router.push(`/edit/${datasetName}/${itemName}`)
-      this.$emit('openItem', response.data.item as DatasetItem)
+      if(!await this.$router.push(`/edit/${datasetName}/${itemName}`)) {
+        this.$emit('openItem', response.data.item as DatasetItem) 
+      }
     },
     saveHandler() {
       const pathPart = this.$router.currentRoute.value.path.split('/')

@@ -129,6 +129,8 @@ async def create_dataset_item(
     """
     Creates a dataset item.
     """
+    if item.name == "":
+        return JSONResponse({"message": "Dataset item name cannot be empty"}, status_code=400)
     dataset = db.get_dataset_by_name(dataset_name)
     dataset.items.append(item)
     db.update_dataset_by_name(dataset_name, dataset)

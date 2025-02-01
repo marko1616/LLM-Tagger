@@ -7,7 +7,7 @@ class PromptTextInput extends ClassicPreset.Control {
   data = ref('')
   size: NodeSize
 
-  constructor(title: string, prompt?: string, private resizeCallback?: () => void, size? : NodeSize) {
+  constructor(title: string, prompt?: string, size? : NodeSize, private resizeCallback?: () => void) {
     super()
     this.data.value = prompt ?? ''
     this.title.value = title

@@ -28,13 +28,13 @@ This project provides a Docker setup to deploy the application easily. Additiona
    ```
 
 5. **Build arguments**
-    - `USE_MIRROR`: Set to `true` to use a mirror from [`ustc`](https://mirrors.ustc.edu.cn/) for `yarn` and `pip`. Default is `false`.  
+    - `USE_MIRROR`: Set to `true` to use a mirror from [`ustc`](https://mirrors.ustc.edu.cn/) for `npm` and `pip`. Default is `false`.  
     Example:
     ```bash
     docker compose build --build-arg USE_MIRROR=true
     ```
 
-    - `PROXY`: Set the proxy server for `yarn` and `pip`.  
+    - `PROXY`: Set the proxy server for `npm` and `pip`.  
     Example:
     ```bash
     docker compose build --build-arg PROXY=http://your-proxy-server:port

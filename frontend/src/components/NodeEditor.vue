@@ -43,6 +43,13 @@ export default defineComponent({
 <style lang="scss">
 @use "@/styles/color.scss" as *;
 
+/**
+ * Apply !important to override CSS specificity issues that arise
+ * when switching between `npm serve` (development) and `npm build` (production).
+ * In some cases, styles might not be applied correctly due to differences in how
+ * CSS is processed during development and production builds. Using !important ensures
+ * that this particular style is consistently applied regardless of the build environment.
+ */
 [rete-context-menu] {
   box-sizing: border-box !important;
   min-width: max-content !important;
