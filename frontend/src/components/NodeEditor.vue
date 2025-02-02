@@ -55,7 +55,7 @@ export default defineComponent({
   min-width: max-content !important;
   background: $container-bg-color !important;
   border: 2px solid $container-border-color !important;
-  border-radius: 10px !important;
+  border-radius: 0.5em !important;
   transition: border-color 0.3s ease !important;
 
   &:hover {
@@ -102,7 +102,7 @@ export default defineComponent({
   }
 
   .search {
-    font-size: 1.4vh !important;
+    font-size: 1.5rem !important;
     color: $content-color !important;
   }
 }

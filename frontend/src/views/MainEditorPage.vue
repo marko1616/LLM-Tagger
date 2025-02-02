@@ -6,13 +6,12 @@
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
-        <DatasetPanel @openItem="openItem" @saveCurrentItem="saveCurrentItem"/>
+        <DatasetPanel @openItem="openItem" @saveCurrentItem="saveCurrentItem" ref="datasetPanelRef"/>
+        <PluginPanel @getSelectedDataset="getSelectedDataset" @flushDatasets="flushDatasets" ref="pluginPanelRef"/>
       </div>
       <footer>
-        <p>
-          &copy; 2024 <a href="https://github.com/marko1616/LLM-Tagger" target="_blank">LLM-Tagger</a>.
-          Licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0 License</a>.
-        </p>
+        <p>&copy; 2024 <a href="https://github.com/marko1616/LLM-Tagger" target="_blank">LLM-Tagger</a>.</p>
+        <p>Licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0 License</a>.</p>
       </footer>
     </div>
   </div>
@@ -28,12 +27,14 @@ import { editingState } from '@/components/NodeEditorStore'
 import NodeEditor from '@/components/NodeEditor.vue'
 import TextEditor from '@/components/TextEditor.vue'
 import DatasetPanel from '@/components/DatasetPanel.vue'
+import PluginPanel from '@/components/PluginPanel.vue'
 
 export default defineComponent({
   components: {
     NodeEditor,
     TextEditor,
-    DatasetPanel
+    DatasetPanel,
+    PluginPanel
   },
   methods: {
     openItem(item: DatasetItem) {
@@ -44,6 +45,12 @@ export default defineComponent({
     },
     closeEditor() {
       this.isEditorVisible = false
+    },
+    getSelectedDataset(callback: (datasetName: string) => void) {
+      const selectedDataset = (this.$refs.datasetPanelRef as typeof DatasetPanel).getSelectedDataset()
+      if(selectedDataset) {
+        callback(selectedDataset)
+      }
     },
     async ctrlSaveHandler (event: KeyboardEvent) {
       if (event.ctrlKey && (event.key === 's' || event.key === 'S')) {
@@ -61,6 +68,9 @@ export default defineComponent({
       const datasetItem: DatasetItem = this.nodeEditorRef?.exportDatasetItem()
       await axios.put(`/datasets/${datasetName}/${itemName}`, datasetItem)
       editingState.saved = true
+    },
+    async flushDatasets() {
+      await (this.$refs.datasetPanelRef as typeof DatasetPanel).flushDatasets()
     }
   },
   mounted() {
@@ -96,9 +106,15 @@ export default defineComponent({
 
 footer {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  margin-top: 1vh;
+  height: 5%;
   color: $content-color;
+
+  & > p {
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+  }
 }
 
 a {
@@ -142,17 +158,18 @@ a:active {
 }
 
 .sidebar-main-panel {
+  box-sizing: border-box;
   display: flex;
   flex-grow: 1;
-}
-
-.sidebar-buttom-panel {
-  display: flex;
-  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  max-height: 95%;
 }
 </style>
 
-<style lang="scss">
+<style lang="css">
+@import 'simplebar-vue/dist/simplebar.min.css';
+
 html, body {
   display: flex;
   width: 100vw;
@@ -167,5 +184,9 @@ html, body {
   width: 100vw;
   height: 100vh;
   font-family: Consolas, "Courier New", "Microsoft YaHei", "Noto Sans CJK", monospace;
+}
+
+[data-simplebar] {
+  width: 100%;
 }
 </style>

@@ -13,10 +13,11 @@
           </li>
           <li
             v-for="datasetSummary in datasetSummaries.filter((dataset) => {return !datasetSearchQuery || dataset.name.toLocaleLowerCase().includes(datasetSearchQuery)})" :key="datasetSummary.name"
-            @click="(event) => {flipDropdownState(event)}"
+            :dataset-name="datasetSummary.name"
+            @click="selectDataset(datasetSummary.name)"
             @contextmenu.prevent="openContextMenu($event, datasetSummary.name)"
             @click.stop>
-            <p @click="() => datasetSummary.show = !datasetSummary.show">{{ datasetSummary.name }}</p>
+            <p @click="datasetSummary.show = !datasetSummary.show">{{ datasetSummary.name }}</p>
             <transition name="item-list"><ul class="item-list" v-show="datasetSummary.show">
               <input v-model="datasetSummary.searchQuery" class="search" placeholder="Search item..."/>
               <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
@@ -42,13 +43,13 @@
       </simplebar>
       <transition name="context-menu"><div class="context-menu" v-show="contextMenuOpened" ref="contextMenuRef" @click.stop>
         <div class="item"
-          @click="() => {doDelete()}"
+          @click="doDelete()"
           @click.stop
           v-show="contextMenuTargetType == 'dataset'">
           Delete dataset
         </div>
         <div class="item"
-          @click="() => {doDelete()}"
+          @click="doDelete()"
           @click.stop
           v-show="contextMenuTargetType == 'item'">
           Delete item
@@ -69,7 +70,6 @@ import { defineComponent, ref } from 'vue'
 import { ContextMenuTargetType, Role, DatasetItem, Dataset, DatasetSummary } from '@/types/dataset'
 
 import simplebar from 'simplebar-vue'
-import 'simplebar-vue/dist/simplebar.min.css'
 
 type SelectedItem = {
   datasetName: string | null,
@@ -123,6 +123,16 @@ export default defineComponent({
         datasetName: datasetName,
         itemName: itemName
       }
+    },
+    selectDataset(datasetName: string) {
+      this.datasetListRef?.querySelectorAll('.dataset-list > li:not(.create)').forEach((element) => {
+        if(element.getAttribute('dataset-name') === datasetName) {
+          element.classList.add('selected')
+        } else {
+          element.classList.remove('selected')
+        }
+      })
+      this.selectedDataset = datasetName
     },
     openContextMenu(event: MouseEvent, datasetName: string, itemName: string | null = null) {
       this.contextMenuOpened = true
@@ -256,6 +266,9 @@ export default defineComponent({
     globalClick() {
       this.foldDropdowns()
       this.contextMenuOpened = false
+    },
+    getSelectedDataset() {
+      return this.selectedDataset
     }
   },
   mounted() {
@@ -274,6 +287,7 @@ export default defineComponent({
     const contextMenuTargetType = ref<string>(ContextMenuTargetType.DATASET)
     const contextMenuTargetDataset = ref<string>('')
     const contextMenuTargetItem = ref<string|null>(null)
+    const selectedDataset = ref<string|null>(null)
     const selectedItem = ref<SelectedItem>({
       datasetName: null,
       itemName: null
@@ -287,6 +301,7 @@ export default defineComponent({
       contextMenuOpened,
       contextMenuTargetDataset,
       contextMenuTargetItem,
+      selectedDataset,
       selectedItem
     }
   }
@@ -299,20 +314,24 @@ export default defineComponent({
 
 .dataset-panel {
   display: flex;
+  flex-grow: 1;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  max-height: 50%;
 }
 
 .list-container {
+  box-sizing: border-box;
   display: flex;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   border: 0.2em solid $container-border-color;
   border-radius: 1em;
 }
 
 .btn-container {
+  box-sizing: border-box;
   display: flex;
   justify-content: space-evenly;
   margin: 0.25em;
@@ -328,6 +347,10 @@ export default defineComponent({
 
     &:hover {
       background-color: $button-hover-bg-color;
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
   }
 }
@@ -364,6 +387,7 @@ export default defineComponent({
   color: $content-color;
   user-select: none;
   background-color: $dropdown-list-bg-color;
+  border-radius: 0.5em;
   transition: all 0.3s ease;
 
   & > * {
@@ -387,7 +411,6 @@ export default defineComponent({
   flex-direction: column;
   align-items: center;
   margin-top: 10px;
-  font-size: large;
   pointer-events: none;
   background-color: $dropdown-list-bg-color;
   transition: all 0.3s ease;
@@ -470,14 +493,13 @@ export default defineComponent({
   }
 
   & > * {
-    padding-left: 1rem;
+    padding-left: 0.4rem;
   }
 
   & .search {
     display: flex;
     padding: 0.1rem 1rem;
     margin: 0.5rem;
-    font-size: 1.25rem;
     color: $content-color;
     outline: none;
     background: $dropdown-list-bg-color;
@@ -503,15 +525,14 @@ export default defineComponent({
 
   & > .search {
     display: flex;
-    padding: 0.25em 1em;
-    margin: 0.5em;
-    font-size: 1.25em;
+    padding: 0.25rem 1rem;
+    margin: 0.5rem;
     color: $content-color;
     outline: none;
     background: $dropdown-list-bg-color;
     border-color: $container-border-color;
     border-width: 0;
-    border-radius: 0.25em;
+    border-radius: 0.25rem;
     transition: all 0.3s ease;
 
     &::placeholder {
@@ -526,7 +547,6 @@ export default defineComponent({
     padding-top: 0.25em;
     padding-bottom: 0.25em;
     margin: 0.1em 0.5em;
-    font-size: 1.25em;
     color: $content-color;
     cursor: pointer;
     user-select: none;
@@ -535,7 +555,7 @@ export default defineComponent({
     transition: all 0.3s ease;
 
     & > * {
-      padding-left: 1em;
+      padding-left: 0.4rem;
     }
 
     &:hover,
@@ -573,9 +593,5 @@ export default defineComponent({
       }
     }
   }
-}
-
-[data-simplebar] {
-  width: 100%;
 }
 </style>

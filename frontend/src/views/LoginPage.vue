@@ -8,7 +8,7 @@
         <label class="remember-label">Remember me for 7 days</label>
       </div>
       <div class="button-container">
-        <div class="button" @click="doLogin">Login</div>
+        <button class="button" @click="doLogin">Login</button>
       </div>
     </form>
   </div></div>
@@ -105,7 +105,7 @@ export default defineComponent({
 .input {
   padding: 0.25em 1em;
   margin: 0.5em;
-  font-size: xx-large;
+  font-size: 2em;
   color: $content-color;
   outline: none;
   background: $main-bg-color;
@@ -137,17 +137,17 @@ export default defineComponent({
   margin-top: 10%;
 }
 
-.button {
+button {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 10em;
   height: 1.75em;
-  font-size: xx-large;
+  font-size: 2em;
   color: $button-color;
-  letter-spacing: 0.25em;
   user-select: none;
   background-color: $button-bg-color;
+  border: 0;
   border-radius: 0.5em;
   transition: all 0.3s ease;
 

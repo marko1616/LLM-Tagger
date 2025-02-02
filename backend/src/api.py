@@ -1,5 +1,7 @@
 import os
 import json
+import pathlib
+import importlib
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends
 from fastapi.responses import JSONResponse, Response
@@ -21,9 +23,12 @@ def load_config() -> Config:
         raise RuntimeError(f"Error loading config: {e}")
 
 
+BASE_PATH = pathlib.Path(__file__).parent
+
 config = load_config()
 app = FastAPI()
 db = Database()
+plugins = []
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,6 +58,7 @@ async def upload_image(file: UploadFile = File(...)) -> JSONResponse:
     if file.size > config.max_file_size:
         raise JSONResponse({"message":"File size too large"}, status_code=400)
     return JSONResponse({
+            "message": "Image uploaded successfully",
             "url": f"{config.api_base}images/{db.create_image(file.filename, file.content_type, await file.read())}"
         })
 
@@ -184,3 +190,24 @@ async def delete_dataset_item(dataset_name: str, item_name: str) -> JSONResponse
             db.update_dataset_by_name(dataset_name, dataset)
             return JSONResponse({"message": "Dataset item deleted"})
     return JSONResponse({"message": "Dataset item not found"}, status_code=404)
+
+@app.get("/plugins/list", dependencies=[Depends(verify_auth_token)])
+async def list_plugins():
+    plugin_info = []
+    for plugin in plugins:
+        plugin_info.append({"url": f"{config.api_base}plugins/{plugin.api_name}", "name": plugin.display_name, "description": plugin.discription, "params": plugin.params})
+    return JSONResponse({"message": "Plugins listed", "plugins": plugin_info})
+
+for path in (BASE_PATH / "plugins").iterdir():
+    if path.is_file() and path.suffix == ".py" and path.stem != "__init__":
+        plugin = importlib.import_module(f".plugins.{path.stem}", package="src")
+        plugin_instance = plugin.Plugin(db)
+        assert plugin_instance.api_name != ""
+        assert plugin_instance.api_name != "list"
+        assert plugin_instance.display_name != ""
+        for param in plugin_instance.params:
+            assert param["display_name"] != ""
+            assert param["api_name"] != ""
+            assert param["type"] in ["dataset", "text", "file"]
+        plugins.append(plugin_instance)
+        app.add_api_route(f"/plugins/{plugin_instance.api_name}", plugin_instance.api, dependencies=[Depends(verify_auth_token)], methods=["POST"])
