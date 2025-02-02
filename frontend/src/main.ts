@@ -16,11 +16,6 @@ router.isReady().then(() => {
   // Why do we need router.isReady()?
   // 1. Ensures all asynchronous routes (e.g., components loaded dynamically via import()) are fully loaded.
   // 2. Avoids executing the initial navigation from `/` to the route manually typed by the user before the router is ready.
-  // 3. Ensures the app is mounted in the correct route state, preventing page flickering or unnecessary redirects.
-
-  // Mount the Vue app to the DOM
-  // This line renders the Vue app into the DOM element with the id "app"
-  // Mounting the app after the router is fully loaded avoids flickering during initial navigation
   app.mount('#app')
 })
 

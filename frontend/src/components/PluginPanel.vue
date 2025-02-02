@@ -4,6 +4,7 @@
       <simplebar><ul class="plugin-list" ref="pluginListRef">
         <li v-for="plugin in plugins" :key="plugin.name"
           :plugin-name="plugin.name"
+          :class="{ selected: selectedPlugin?.name === plugin.name }"
           @click="selectPlugin(plugin.name)">
           <p @click="plugin.show = !plugin.show">{{ plugin.name }}</p>
           <transition name="parameter-list"><ul class="parameter-list" v-show="plugin.show">
@@ -83,17 +84,6 @@ export default defineComponent({
       return this.plugins.find(plugin => plugin.name === pluginName)?.params.find(param => param.apiName === paramName)
     },
     selectPlugin(pluginName: string) {
-      if(!this.pluginListRef) {
-        return
-      }
-
-      this.pluginListRef.querySelectorAll('.plugin-list > *').forEach((element) => {
-        if(element.getAttribute('plugin-name') === pluginName) {
-          element.classList.add('selected')
-        } else {
-          element.classList.remove('selected')
-        }
-      })
       const plugin = this.getPlugin(pluginName) as PluginInfo
       this.selectedPlugin = {
         name: plugin.name,
@@ -129,7 +119,7 @@ export default defineComponent({
         type: param.type
       }
     },
-    applyPlugin(pluginName: string) {
+    async applyPlugin(pluginName: string) {
       const plugin = this.getPlugin(pluginName) as PluginInfo
       let params: {[key: string]: DatasetParam | FileParam} = {}
       plugin.params.forEach((param) => {
@@ -142,7 +132,7 @@ export default defineComponent({
           params[param.apiName] = param.data as File
         }
       })
-      axios.post(plugin.url, params, {
+      await axios.post(plugin.url, params, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

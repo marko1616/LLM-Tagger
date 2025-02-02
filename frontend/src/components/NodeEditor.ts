@@ -299,7 +299,7 @@ export class ReteEditor {
 
   assistantNodeFactory(prompt?: string, size?: NodeSize) {
     const assistantNode = new ClassicPreset.Node('Input-Assistant')
-    assistantNode.addControl('TextInputPositive', new PromptTextInput('Assistant positive', prompt, size, this.gettextareaResizeCallback(assistantNode.id)))
+    assistantNode.addControl('TextInput', new PromptTextInput('Assistant positive', prompt, size, this.gettextareaResizeCallback(assistantNode.id)))
     assistantNode.addOutput('context-out', new ClassicPreset.Output(this.socket))
     assistantNode.addInput('context-in', new ClassicPreset.Input(this.socket))
     return assistantNode
@@ -407,7 +407,7 @@ export class ReteEditor {
     return datasetItem
   }
 
-  async openItem(item: DatasetItem) {
+  async loadItem(item: DatasetItem) {
     // Remove all
     this.replaceRootNode = true
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

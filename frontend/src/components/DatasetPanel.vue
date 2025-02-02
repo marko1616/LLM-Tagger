@@ -14,6 +14,7 @@
           <li
             v-for="datasetSummary in datasetSummaries.filter((dataset) => {return !datasetSearchQuery || dataset.name.toLocaleLowerCase().includes(datasetSearchQuery)})" :key="datasetSummary.name"
             :dataset-name="datasetSummary.name"
+            :class="{ selected: selectedDataset === datasetSummary.name }"
             @click="selectDataset(datasetSummary.name)"
             @contextmenu.prevent="openContextMenu($event, datasetSummary.name)"
             @click.stop>
@@ -31,8 +32,9 @@
               v-for="item in datasetSummary.items.filter((item) => {return !datasetSummary.searchQuery || item.name.toLocaleLowerCase().includes(datasetSummary.searchQuery)})" :key="item.name"
               :dataset-name="datasetSummary.name"
               :item-name="item.name"
+              :class="{ selected: selectedItems.includes({datasetName:datasetSummary.name, itemName: item.name}) }"
               @click="selectItem(datasetSummary.name, item.name)"
-              @dblclick="openItem(datasetSummary.name, item.name)"
+              @dblclick="loadItem(datasetSummary.name, item.name)"
               @contextmenu.prevent.stop="openContextMenu($event, datasetSummary.name, item.name)"
               @click.stop>
                 {{ item.name }}
@@ -81,7 +83,7 @@ export default defineComponent({
     simplebar
   },
   emits: {
-    'openItem': (_dataset: DatasetItem) => {
+    'loadItem': (_datasetName: string, _itemName: string) => {
       return true
     },
     'saveCurrentItem': (_datasetName: string, _itemName: string) => {
@@ -89,10 +91,9 @@ export default defineComponent({
     }
   },
   methods: {
-    async openItem(datasetName: string, itemName: string) {
-      const response = await axios.get(`/datasets/${datasetName}/${itemName}`)
+    async loadItem(datasetName: string, itemName: string) {
       if(!await this.$router.push(`/edit/${datasetName}/${itemName}`)) {
-        this.$emit('openItem', response.data.item as DatasetItem) 
+        this.$emit('loadItem', datasetName, itemName) 
       }
     },
     saveHandler() {
@@ -104,10 +105,15 @@ export default defineComponent({
       }
     },
     saveAsHandler() {
-      if(!this.selectedItem.datasetName || !this.selectedItem.itemName) {
+      if(this.selectedItems.length !== 1) {
+        alert('Please select one item to save.')
         return
       }
-      this.$emit('saveCurrentItem', this.selectedItem.datasetName, this.selectedItem.itemName)
+
+      if(!this.selectedItems[0].datasetName || !this.selectedItems[0].itemName) {
+        return
+      }
+      this.$emit('saveCurrentItem', this.selectedItems[0].datasetName, this.selectedItems[0].itemName)
     },
     selectItem(datasetName: string, itemName: string) {
       this.datasetListRef?.querySelectorAll('.dataset-list > li:not(.create)').forEach((element) => {
@@ -119,19 +125,12 @@ export default defineComponent({
           }
         })
       })
-      this.selectedItem = {
+      this.selectedItems = [{
         datasetName: datasetName,
         itemName: itemName
-      }
+      }]
     },
     selectDataset(datasetName: string) {
-      this.datasetListRef?.querySelectorAll('.dataset-list > li:not(.create)').forEach((element) => {
-        if(element.getAttribute('dataset-name') === datasetName) {
-          element.classList.add('selected')
-        } else {
-          element.classList.remove('selected')
-        }
-      })
       this.selectedDataset = datasetName
     },
     openContextMenu(event: MouseEvent, datasetName: string, itemName: string | null = null) {
@@ -288,10 +287,7 @@ export default defineComponent({
     const contextMenuTargetDataset = ref<string>('')
     const contextMenuTargetItem = ref<string|null>(null)
     const selectedDataset = ref<string|null>(null)
-    const selectedItem = ref<SelectedItem>({
-      datasetName: null,
-      itemName: null
-    })
+    const selectedItems = ref<SelectedItem[]>([])
     return {
       datasetSummaries,
       datasetSearchQuery,
@@ -302,7 +298,7 @@ export default defineComponent({
       contextMenuTargetDataset,
       contextMenuTargetItem,
       selectedDataset,
-      selectedItem
+      selectedItems
     }
   }
 })

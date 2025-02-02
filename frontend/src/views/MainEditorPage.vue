@@ -6,7 +6,7 @@
     </div>
     <div class="sidebar">
       <div class="sidebar-main-panel">
-        <DatasetPanel @openItem="openItem" @saveCurrentItem="saveCurrentItem" ref="datasetPanelRef"/>
+        <DatasetPanel @loadItem="loadItem" @saveCurrentItem="saveCurrentItem" ref="datasetPanelRef"/>
         <PluginPanel @getSelectedDataset="getSelectedDataset" @flushDatasets="flushDatasets" ref="pluginPanelRef"/>
       </div>
       <footer>
@@ -37,8 +37,9 @@ export default defineComponent({
     PluginPanel
   },
   methods: {
-    openItem(item: DatasetItem) {
-      this.nodeEditorRef?.openItem(item)
+    async loadItem(datasetName: string, itemName: string) {
+      const item = (await axios.get(`/datasets/${datasetName}/${itemName}`)).data.item as DatasetItem
+      this.nodeEditorRef?.loadItem(item)
     },
     toggleEditor() {
       this.isEditorVisible = !this.isEditorVisible
@@ -78,6 +79,11 @@ export default defineComponent({
       this.toggleEditor()
     }
     window.addEventListener('keydown', this.ctrlSaveHandler)
+    if(this.$route.params.datasetName) {
+      const datasetName = this.$route.params.datasetName as string
+      const itemName = this.$route.params.itemName as string
+      this.loadItem(datasetName, itemName)
+    }
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.ctrlSaveHandler)

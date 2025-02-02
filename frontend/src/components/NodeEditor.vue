@@ -23,8 +23,8 @@ export default defineComponent({
     exportDatasetItem() {
       return this.editor?.exportDatasetItem()
     },
-    openItem(item: DatasetItem) {
-      this.editor?.openItem(item)
+    loadItem(item: DatasetItem) {
+      this.editor?.loadItem(item)
     }
   }
 })
