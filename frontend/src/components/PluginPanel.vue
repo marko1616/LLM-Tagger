@@ -13,6 +13,7 @@
             </li>
             <li v-for="param in plugin.params" :key="param.displayName"
             :param-name="param.apiName"
+            :class="{ selected: selectedParam?.apiName === param.apiName }"
             @click="selectParam(plugin.name, param.apiName)">
               {{ param.displayName }}
             </li>
@@ -97,19 +98,6 @@ export default defineComponent({
       if(!this.pluginListRef) {
         return
       }
-
-      this.pluginListRef.querySelectorAll('.plugin-list > *').forEach((element) => {
-        if(element.getAttribute('plugin-name') === pluginName) {
-          element.querySelectorAll('li').forEach((element) => {
-            if(element.getAttribute('param-name') === paramName) {
-              element.classList.add('selected')
-            } else {
-              element.classList.remove('selected')
-            }
-          })
-        }
-      })
-
       const param = this.getParam(pluginName, paramName) as PluginParam
 
       this.selectedParam = {

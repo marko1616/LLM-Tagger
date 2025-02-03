@@ -1,6 +1,7 @@
 <template>
   <div class="dataset-panel">
-    <div class="list-container">
+    <div class="list-container" @mousedown="startSelection" @mousemove="handleSelection" @wheel="handleSelection" @mouseup="endSelection" @keydown="handleKeyDown">
+      <div v-if="isSelecting" class="selection-box" :style="selectionBoxStyle"></div>
       <simplebar>
         <ul class="dataset-list" ref="datasetListRef">
           <input v-model="datasetSearchQuery" class="search" placeholder="Search item..." />
@@ -28,11 +29,11 @@
                 </div>
                 <p>Create new item</p>
               </li>
-              <li class="item"
+              <li class="dataset-item"
               v-for="item in datasetSummary.items.filter((item) => {return !datasetSummary.searchQuery || item.name.toLocaleLowerCase().includes(datasetSummary.searchQuery)})" :key="item.name"
               :dataset-name="datasetSummary.name"
               :item-name="item.name"
-              :class="{ selected: selectedItems.includes({datasetName:datasetSummary.name, itemName: item.name}) }"
+              :class="{ selected: selectedItems.some((selectedItem) => selectedItem.datasetName === datasetSummary.name && selectedItem.itemName === item.name) }"
               @click="selectItem(datasetSummary.name, item.name)"
               @dblclick="loadItem(datasetSummary.name, item.name)"
               @contextmenu.prevent.stop="openContextMenu($event, datasetSummary.name, item.name)"
@@ -90,6 +91,20 @@ export default defineComponent({
       return true
     }
   },
+  computed: {
+    selectionBoxStyle() {
+      const left = Math.min(this.startX, this.endX);
+      const top = Math.min(this.startY, this.endY);
+      const width = Math.abs(this.startX - this.endX);
+      const height = Math.abs(this.startY - this.endY);
+      return {
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+      };
+    },
+  },
   methods: {
     async loadItem(datasetName: string, itemName: string) {
       if(!await this.$router.push(`/edit/${datasetName}/${itemName}`)) {
@@ -116,15 +131,6 @@ export default defineComponent({
       this.$emit('saveCurrentItem', this.selectedItems[0].datasetName, this.selectedItems[0].itemName)
     },
     selectItem(datasetName: string, itemName: string) {
-      this.datasetListRef?.querySelectorAll('.dataset-list > li:not(.create)').forEach((element) => {
-        (element as HTMLElement).querySelectorAll('li:not(.create)').forEach((element) => {
-          if(element.getAttribute('dataset-name') === datasetName && element.getAttribute('item-name') === itemName) {
-            element.classList.add('selected')
-          } else {
-            element.classList.remove('selected')
-          }
-        })
-      })
       this.selectedItems = [{
         datasetName: datasetName,
         itemName: itemName
@@ -160,19 +166,19 @@ export default defineComponent({
       try {
         if (this.contextMenuTargetType === ContextMenuTargetType.DATASET) {
           if (confirm(`Are you sure you want to delete dataset ${this.contextMenuTargetDataset}?`)) {
-            await axios.delete(`/datasets/${this.contextMenuTargetDataset}`);
-            this.flushDatasets();
+            await axios.delete(`/datasets/${this.contextMenuTargetDataset}`)
+            this.flushDatasets()
           }
         } else if (this.contextMenuTargetType === ContextMenuTargetType.ITEM) {
           if (confirm(`Are you sure you want to delete item ${this.contextMenuTargetItem} from dataset ${this.contextMenuTargetDataset}?`)) {
-            await axios.delete(`/datasets/${this.contextMenuTargetDataset}/${this.contextMenuTargetItem}`);
-            this.flushDatasets();
+            await axios.delete(`/datasets/${this.contextMenuTargetDataset}/${this.contextMenuTargetItem}`)
+            this.flushDatasets()
           }
         }
       } catch (error) {
-        console.error('Error deleting:', error);
+        console.error('Error deleting:', error)
       } finally {
-        this.closeContextMenu();
+        this.closeContextMenu()
       }
     },
     async createItem(datasetName: string, itemName: string) {
@@ -268,6 +274,52 @@ export default defineComponent({
     },
     getSelectedDataset() {
       return this.selectedDataset
+    },
+    startSelection(event: MouseEvent) {
+      this.isSelecting = true;
+      this.startX = event.clientX;
+      this.startY = event.clientY;
+      this.endX = event.clientX;
+      this.endY = event.clientY;
+      this.selectedItems = [];
+    },
+    endSelection() {
+      this.isSelecting = false;
+    },
+    handleSelection(event: MouseEvent | WheelEvent) {
+      if (this.isSelecting) {
+        this.endX = event.clientX;
+        this.endY = event.clientY;
+        const selectionRect = {
+          left: Math.min(this.startX, this.endX),
+          top: Math.min(this.startY, this.endY),
+          right: Math.max(this.startX, this.endX),
+          bottom: Math.max(this.startY, this.endY),
+        }
+        this.datasetListRef?.querySelectorAll('.dataset-item')?.forEach((element) => {
+          const itemRect = element.getBoundingClientRect()
+          if(itemRect.left < selectionRect.right &&
+            itemRect.right > selectionRect.left &&
+            itemRect.top < selectionRect.bottom &&
+            itemRect.bottom > selectionRect.top &&
+            !this.selectedItems.some((selectedItems) => selectedItems.datasetName === element.getAttribute('dataset-name') && selectedItems.itemName === element.getAttribute('item-name'))
+          ) {
+            this.selectedItems.push({
+              datasetName: element.getAttribute('dataset-name') as string,
+              itemName: element.getAttribute('item-name') as string,
+            })
+          }
+        })
+      }
+    },
+    async handleKeyDown(event: KeyboardEvent) {
+      if(event.key === 'Delete' && confirm(`Delete ${this.selectedItems.length} selected items?`)) {
+        for(const item of this.selectedItems) {
+          await axios.delete(`/datasets/${item.datasetName}/${item.itemName}`)
+        }
+      }
+      this.flushDatasets()
+      this.selectedItems = []
     }
   },
   mounted() {
@@ -288,6 +340,12 @@ export default defineComponent({
     const contextMenuTargetItem = ref<string|null>(null)
     const selectedDataset = ref<string|null>(null)
     const selectedItems = ref<SelectedItem[]>([])
+
+    const isSelecting = ref<boolean>(false)
+    const startX = ref(0)
+    const startY = ref(0)
+    const endX = ref(0)
+    const endY = ref(0)
     return {
       datasetSummaries,
       datasetSearchQuery,
@@ -298,7 +356,12 @@ export default defineComponent({
       contextMenuTargetDataset,
       contextMenuTargetItem,
       selectedDataset,
-      selectedItems
+      selectedItems,
+      isSelecting,
+      startX,
+      startY,
+      endX,
+      endY
     }
   }
 })
@@ -307,6 +370,15 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/styles/color.scss" as *;
 @use "sass:color";
+
+.selection-box {
+  position: absolute;
+  border: 0.1em solid $selection-box-color;
+  border-radius: 0.25em;
+  background-color: rgba($selection-box-color, 0.5);
+  z-index: 128;
+  pointer-events: none;
+}
 
 .dataset-panel {
   display: flex;

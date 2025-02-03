@@ -130,7 +130,7 @@ class Plugin:
                 )
                 converted_item.nodeItems.append(
                     NodeItem(
-                        role=Role.ASSISTANT,    
+                        role=Role.ASSISTANT,
                         positive=node_item.model_response,
                         negative="",
                         nodePosition=NodePosition(x=count*2*350,y=0),
