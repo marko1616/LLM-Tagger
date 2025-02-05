@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from pydantic import BaseModel
 from enum import Enum
-from typing import Optional
+from typing import Optional, Awaitable
 
 class Image(BaseModel):
     id: int
@@ -50,3 +51,21 @@ class Dataset(BaseModel):
     name: str
     timestamp: int
     items: list[DatasetItem]
+
+
+class PluginParam(BaseModel):
+    display_name: str
+    api_name: str
+    type: str
+    description: str
+
+
+@dataclass
+class PluginInterface:
+    display_name: str
+    api_name: str
+    type: str
+    content_type: str
+    description: str
+    params: list[PluginParam]
+    handler: callable | Awaitable

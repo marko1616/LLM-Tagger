@@ -13,6 +13,7 @@ type PluginParam = {
 type PluginInfo = {
   description: string
   name: string
+  contentType: string
   params: PluginParam[]
   url: string
 }
@@ -27,6 +28,7 @@ type PluginParamSummary = {
 type PluginSummary = {
   description: string
   name: string
+  contentType: string
   params: PluginParam[]
   url: string
   show: boolean

@@ -364,8 +364,8 @@ export class ReteEditor {
           break
         }
         case 'Input-Assistant': {
-          const positivePrompt = (node.controls['TextInputPositive'] as UnwrapRef<PromptTextInput>).data as string
-          const {width, height} = (node.controls['TextInputPositive'] as PromptTextInput).size
+          const positivePrompt = (node.controls['TextInput'] as UnwrapRef<PromptTextInput>).data as string
+          const {width, height} = (node.controls['TextInput'] as PromptTextInput).size
           const {x, y} = this.getNodePosition(node.id) as Position
           const to: number[] = []
           this.getConnectionsFrom(node.id).forEach(connection => {

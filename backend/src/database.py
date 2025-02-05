@@ -78,9 +78,10 @@ class Database:
         with self.get_session() as session:
             return session.query(DatasetTable).filter_by(id=id).first().as_dataset()
 
-    def get_dataset_by_name(self, name: str) -> Dataset:
+    def get_dataset_by_name(self, name: str) -> Dataset | None:
         with self.get_session() as session:
-            return session.query(DatasetTable).filter_by(name=name).first().as_dataset()
+            dataset = session.query(DatasetTable).filter_by(name=name).first()
+            return dataset.as_dataset() if dataset else None
         
     def delete_dataset_by_id(self, id: int) -> None:
         with self.get_session() as session:

@@ -4,7 +4,7 @@
       <div v-if="isSelecting" class="selection-box" :style="selectionBoxStyle"></div>
       <simplebar>
         <ul class="dataset-list" ref="datasetListRef">
-          <input v-model="datasetSearchQuery" class="search" placeholder="Search item..." />
+          <input v-model="datasetSearchQuery" class="search" placeholder="Search dataset..." />
           <li class="create" @click="(event) => {flipDropdownState(event)}" @click.stop>
             <div class="dropdown-list" @click.stop>
               <input class="input" placeholder="Enter name"/>
@@ -315,10 +315,10 @@ export default defineComponent({
     async handleKeyDown(event: KeyboardEvent) {
       if(event.key === 'Delete' && confirm(`Delete ${this.selectedItems.length} selected items?`)) {
         for(const item of this.selectedItems) {
+          this.flushDatasets()
           await axios.delete(`/datasets/${item.datasetName}/${item.itemName}`)
         }
       }
-      this.flushDatasets()
       this.selectedItems = []
     }
   },

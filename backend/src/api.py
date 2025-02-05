@@ -28,7 +28,7 @@ BASE_PATH = pathlib.Path(__file__).parent
 config = load_config()
 app = FastAPI()
 db = Database()
-plugins = []
+plugin_interfaces = []
 
 app.add_middleware(
     CORSMiddleware,
@@ -194,20 +194,32 @@ async def delete_dataset_item(dataset_name: str, item_name: str) -> JSONResponse
 @app.get("/plugins/list", dependencies=[Depends(verify_auth_token)])
 async def list_plugins():
     plugin_info = []
-    for plugin in plugins:
-        plugin_info.append({"url": f"{config.api_base}plugins/{plugin.api_name}", "name": plugin.display_name, "description": plugin.discription, "params": plugin.params})
+    for interface in plugin_interfaces:
+        plugin_info.append({"url": 
+                            f"/plugins/{interface.api_name}",
+                            "name": interface.display_name,
+                            "description": interface.description,
+                            "content_type": interface.content_type,
+                            "params": [param.dict() for param in interface.params]})
     return JSONResponse({"message": "Plugins listed", "plugins": plugin_info})
 
 for path in (BASE_PATH / "plugins").iterdir():
     if path.is_file() and path.suffix == ".py" and path.stem != "__init__":
         plugin = importlib.import_module(f".plugins.{path.stem}", package="src")
         plugin_instance = plugin.Plugin(db)
-        assert plugin_instance.api_name != ""
-        assert plugin_instance.api_name != "list"
-        assert plugin_instance.display_name != ""
-        for param in plugin_instance.params:
-            assert param["display_name"] != ""
-            assert param["api_name"] != ""
-            assert param["type"] in ["dataset", "text", "file"]
-        plugins.append(plugin_instance)
-        app.add_api_route(f"/plugins/{plugin_instance.api_name}", plugin_instance.api, dependencies=[Depends(verify_auth_token)], methods=["POST"])
+        for interface in plugin_instance.plugin_interfaces:
+            assert interface.type in ["request", "download"]
+            for param in interface.params:
+                assert param.display_name != ""
+                assert param.api_name != ""
+                assert param.type in ["dataset", "text", "file"]
+            if interface.type == "request":
+                plugin_interfaces.append(interface)
+                app.add_api_route(f"/plugins/{interface.api_name}", interface.handler, dependencies=[Depends(verify_auth_token)], methods=["POST"])
+            elif interface.type == "download":
+                app.add_api_route(f"/plugins/{interface.api_name}", interface.handler, dependencies=[Depends(verify_auth_token)], methods=["GET"])
+            
+        if plugin_instance.on_events:
+            for event, handlers in plugin_instance.on_events.items():
+                for handler in handlers:
+                    app.add_event_handler(event, handler)

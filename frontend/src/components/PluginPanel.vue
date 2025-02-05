@@ -13,7 +13,7 @@
             </li>
             <li v-for="param in plugin.params" :key="param.displayName"
             :param-name="param.apiName"
-            :class="{ selected: selectedParam?.apiName === param.apiName }"
+            :class="{ selected: selectedParam?.pluginName === plugin.name && selectedParam?.apiName === param.apiName }"
             @click="selectParam(plugin.name, param.apiName)">
               {{ param.displayName }}
             </li>
@@ -88,6 +88,7 @@ export default defineComponent({
       const plugin = this.getPlugin(pluginName) as PluginInfo
       this.selectedPlugin = {
         name: plugin.name,
+        contentType: plugin.contentType,
         description: plugin.description,
         params: plugin.params,
         url: plugin.url,
@@ -120,11 +121,25 @@ export default defineComponent({
           params[param.apiName] = param.data as File
         }
       })
-      await axios.post(plugin.url, params, {
+      const response = await axios.post(plugin.url, params, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': plugin.contentType,
         },
       })
+      if(response.data.url) {
+        const downloadResponse = await axios.get(response.data.url, {
+            responseType: 'blob',
+        })
+        const blob = new Blob([downloadResponse.data]);
+        let filename = response.data.filename
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(link.href)
+      }
       this.$emit('flushDatasets')
     },
     pickDataset() {
@@ -183,6 +198,7 @@ export default defineComponent({
         this.plugins.push({
           description: plugin.description,
           name: plugin.name,
+          contentType: plugin.content_type,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           params: plugin.params.map((param: any) => {
             return {
