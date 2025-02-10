@@ -2,6 +2,7 @@ from src.api import db, config
 
 if __name__ == "__main__":
     import uvicorn
+
     db.init_db()
     uvicorn.run(
         "src.api:app",

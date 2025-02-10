@@ -3,11 +3,13 @@ from pydantic import BaseModel
 from enum import Enum
 from typing import Optional, Awaitable
 
+
 class Image(BaseModel):
     id: int
     name: str
     file_type: str
     data: bytes
+
 
 class Config(BaseModel):
     listen: str
@@ -21,7 +23,7 @@ class Role(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
     TOOL = "tool"
-    
+
 
 class NodePosition(BaseModel):
     x: float

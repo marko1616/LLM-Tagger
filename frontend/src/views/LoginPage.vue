@@ -23,14 +23,17 @@ import router from '@/router';
 
 export default defineComponent({
   methods: {
-    async doLogin() {
+    async doLogin(event: Event) {
+      event.preventDefault()
+      event.stopPropagation()
       axios.defaults.headers.common['Authorization'] = (this.authkeyRef as HTMLInputElement).value
       try {
         const _response = await axios.get('/datasets/list')
         if(this.rememberRef?.checked) {
           Cookies.set('authkey', (this.authkeyRef as HTMLInputElement).value, { expires: 7 })
         }
-        router.push('/')
+        console.log("PUSH")
+        await router.push('/edit/')
       } catch (error) {
         if(error instanceof AxiosError) {
           if(error.response?.status === 401) {
@@ -48,9 +51,7 @@ export default defineComponent({
   mounted() {
     this.enterHandler = (event) => {
       if (event.key === 'Enter') {
-        this.doLogin()
-        event.preventDefault()
-        event.stopPropagation()
+        this.doLogin(event)
       }
     }
     window.addEventListener('keypress', this.enterHandler)

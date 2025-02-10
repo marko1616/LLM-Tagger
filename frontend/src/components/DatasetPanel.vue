@@ -1,6 +1,6 @@
 <template>
   <div class="dataset-panel">
-    <div class="list-container" @mousedown="startSelection" @mousemove="handleSelection" @wheel="handleSelection" @mouseup="endSelection" @keydown="handleKeyDown">
+    <div class="list-container" @mousedown="startSelection" @wheel="handleSelection" @keydown="handleKeyDown">
       <div v-if="isSelecting" class="selection-box" :style="selectionBoxStyle"></div>
       <simplebar>
         <ul class="dataset-list" ref="datasetListRef">
@@ -325,9 +325,13 @@ export default defineComponent({
   mounted() {
     this.flushDatasets()
     document.addEventListener('click', this.globalClick)
+    document.addEventListener('mousemove', this.handleSelection)
+    document.addEventListener('mouseup', this.endSelection)
   },
   beforeUnmount() {
     document.removeEventListener('click', this.globalClick)
+    document.removeEventListener('mousemove', this.handleSelection)
+    document.removeEventListener('mouseup', this.endSelection)
   },
   setup() {
     const datasetSummaries = ref<DatasetSummary[]>([])
@@ -373,11 +377,11 @@ export default defineComponent({
 
 .selection-box {
   position: absolute;
-  border: 0.1em solid $selection-box-color;
-  border-radius: 0.25em;
-  background-color: rgba($selection-box-color, 0.5);
   z-index: 128;
   pointer-events: none;
+  background-color: rgba($selection-box-color, 0.5);
+  border: 0.1em solid $selection-box-color;
+  border-radius: 0.25em;
 }
 
 .dataset-panel {
@@ -396,6 +400,7 @@ export default defineComponent({
   overflow: hidden;
   border: 0.2em solid $container-border-color;
   border-radius: 1em;
+  clip-path: inset(0);
 }
 
 .btn-container {

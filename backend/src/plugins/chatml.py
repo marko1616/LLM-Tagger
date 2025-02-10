@@ -6,8 +6,8 @@ import asyncio
 from fastapi import File, UploadFile, Body
 from fastapi.responses import JSONResponse, Response
 
-from pydantic import BaseModel, ValidationError, model_validator
-from typing import Optional, Any
+from pydantic import BaseModel, ValidationError
+from typing import List
 
 from ..database import Database
 from ..schemas import (
@@ -45,23 +45,13 @@ def parse_json_or_jsonl(content):
         raise ValueError("Content is neither valid JSON nor valid JSONL format")
 
 
-class AlpacaDialogueRound(BaseModel):
-    human_instruction: str
-    assistant_response: str
-
-    @model_validator(mode="before")
-    def parse_list_to_fields(cls, value: Any):
-        if isinstance(value, list) and len(value) == 2:
-            return {"human_instruction": value[0], "assistant_response": value[1]}
-        return value
+class ChatMLMessage(BaseModel):
+    role: str
+    content: str
 
 
-class AlpacaInteraction(BaseModel):
-    instruction: str
-    input: Optional[str] = None
-    output: str
-    system: Optional[str] = None
-    history: Optional[list[AlpacaDialogueRound]] = None
+class ChatMLInteraction(BaseModel):
+    conversation: List[ChatMLMessage]
 
 
 class ExportReq(BaseModel):
@@ -84,12 +74,12 @@ class Plugin:
         self.db = db
         self.plugin_interfaces = [
             PluginInterface(
-                display_name="Import alpaca",
-                api_name="import_alpaca",
+                display_name="Import ChatML",
+                api_name="import_chatml",
                 type="request",
                 content_type="multipart/form-data",
-                description="Import alpaca form dataset in a json or jsonl file.",
-                handler=self.import_alpaca,
+                description="Import ChatML format dataset in a json or jsonl file.",
+                handler=self.import_chatml,
                 params=[
                     PluginParam(
                         display_name="Target dataset",
@@ -98,7 +88,7 @@ class Plugin:
                         type="dataset",
                     ),
                     PluginParam(
-                        display_name="Alpaca dataset",
+                        display_name="ChatML dataset",
                         api_name="file",
                         description="The file to import.",
                         type="file",
@@ -106,12 +96,12 @@ class Plugin:
                 ],
             ),
             PluginInterface(
-                display_name="Export alpaca",
-                api_name="export_alpaca",
+                display_name="Export ChatML",
+                api_name="export_chatml",
                 type="request",
                 content_type="application/json",
-                description="Export alpaca dataset to a json or jsonl file.",
-                handler=self.export_alpaca,
+                description="Export dataset to ChatML format json or jsonl file.",
+                handler=self.export_chatml,
                 params=[
                     PluginParam(
                         display_name="Target dataset",
@@ -122,12 +112,12 @@ class Plugin:
                 ],
             ),
             PluginInterface(
-                display_name="Download alpaca",
-                api_name="download_alpaca/{download_id}",
+                display_name="Download ChatML",
+                api_name="download_chatml/{download_id}",
                 type="download",
                 content_type="application/octet-stream",
-                description="Download exported alpaca dataset.",
-                handler=self.download_file,
+                description="Download exported ChatML dataset.",
+                handler=self.download_file,  # Reusing download_file as it's generic
                 params=[],
             ),
         ]
@@ -148,103 +138,93 @@ class Plugin:
                 del self.export_cache[download_id]
             await asyncio.sleep(self.file_expiration_time)
 
-    async def import_alpaca(
+    async def import_chatml(
         self,
         dataset_name: str = Body(..., description="Dataset name"),
         file: UploadFile = File(..., description="File to upload"),
     ) -> JSONResponse:
         try:
-            data = parse_json_or_jsonl(file.file.read().decode())
+            content = await file.read()
+            data = parse_json_or_jsonl(content.decode())
         except ValueError:
             return JSONResponse(
                 status_code=422,
                 content={"message": "Invalid file format need json or jsonl"},
             )
 
-        alpaca_items = []
+        chatml_items = []
         try:
             if isinstance(data, list):
                 for item in data:
-                    alpaca_items.append(AlpacaInteraction(**item))
+                    chatml_items.append(ChatMLInteraction(conversation=item))
             else:
                 return JSONResponse(
                     status_code=422,
-                    content={"message": "Dataset must be a list of alpaca items"},
+                    content={"message": "Dataset must be a list of chatml items"},
                 )
         except ValidationError as e:
             return JSONResponse(
                 status_code=422,
                 content={
-                    "message": "Invalid alpaca dataset",
+                    "message": "Invalid ChatML format",
                     "details": format_validation_error(e),
                 },
             )
 
-        defalut_prefix = "alpaca"
+        default_prefix = "chatml"
         count = 0
         while True:
-            prefix = f"{defalut_prefix}-{count}-"
+            prefix = f"{default_prefix}-{count}-"
             dataset = self.db.get_dataset_by_name(dataset_name)
             if not any(item.name.startswith(prefix) for item in dataset.items):
                 break
             count += 1
 
-        for i, item in enumerate(alpaca_items):
+        for i, item in enumerate(chatml_items):
             system_node = NodeItem(
                 role=Role.SYSTEM,
-                positive=item.system if item.system else "",
+                positive=item.conversation[0].content
+                if item.conversation[0].role == Role.SYSTEM.value
+                else "",
                 negative="",
                 nodePosition=NodePosition(x=0, y=0),
                 nodeSize=NodeSize(height=64, width=256),
-                to=[1],
+                to=[],
             )
             converted_item = DatasetItem(name=f"{prefix}{i}", nodeItems=[system_node])
-            count = 1
-            if item.history is None:
-                item.history = []
-            for node_item in item.history:
-                converted_item.nodeItems.append(
-                    NodeItem(
-                        role=Role.USER,
-                        positive=node_item.human_instruction,
-                        negative="",
-                        nodePosition=NodePosition(x=(count * 2 - 1) * 350, y=0),
-                        nodeSize=NodeSize(height=64, width=256),
-                        to=[count * 2],
+            for current_idx, conversation_item in enumerate(item.conversation):
+                if conversation_item.role == Role.SYSTEM.value:
+                    if current_idx != 0:
+                        return JSONResponse(
+                            status_code=400,
+                            content={
+                                "message": "System message must be the first message in the conversation"
+                            },
+                        )
+                elif conversation_item.role == Role.USER.value:
+                    converted_item.nodeItems.append(
+                        NodeItem(
+                            role=Role.USER,
+                            positive=conversation_item.content,
+                            negative="",
+                            nodePosition=NodePosition(x=current_idx * 350, y=0),
+                            nodeSize=NodeSize(height=64, width=256),
+                            to=[],
+                        )
                     )
-                )
-                converted_item.nodeItems.append(
-                    NodeItem(
-                        role=Role.ASSISTANT,
-                        positive=node_item.assistant_response,
-                        negative="",
-                        nodePosition=NodePosition(x=count * 2 * 350, y=0),
-                        nodeSize=NodeSize(height=64, width=256),
-                        to=[count * 2 + 1],
+                elif conversation_item.role == Role.ASSISTANT.value:
+                    converted_item.nodeItems.append(
+                        NodeItem(
+                            role=Role.ASSISTANT,
+                            positive=conversation_item.content,
+                            negative="",
+                            nodePosition=NodePosition(x=current_idx * 350, y=0),
+                            nodeSize=NodeSize(height=64, width=256),
+                            to=[],
+                        )
                     )
-                )
-                count += 1
-            converted_item.nodeItems.append(
-                NodeItem(
-                    role=Role.USER,
-                    positive=item.instruction
-                    + (f"\n{item.input}" if item.input else ""),
-                    negative="",
-                    nodePosition=NodePosition(x=(count * 2 - 1) * 350, y=0),
-                    nodeSize=NodeSize(height=64, width=256),
-                    to=[count * 2],
-                )
-            )
-            converted_item.nodeItems.append(
-                NodeItem(
-                    role=Role.ASSISTANT,
-                    positive=item.output,
-                    negative="",
-                    nodePosition=NodePosition(x=count * 2 * 350, y=0),
-                    nodeSize=NodeSize(height=64, width=256),
-                    to=[],
-                )
-            )
+                if current_idx < len(item.conversation) - 1:
+                    converted_item.nodeItems[-1].to.append(current_idx + 1)
             dataset = self.db.get_dataset_by_name(dataset_name)
             dataset.items.append(converted_item)
             self.db.update_dataset_by_name(dataset_name, dataset)
@@ -254,8 +234,8 @@ class Plugin:
         self,
         node_items: list[NodeItem],
         idx: int,
-        context: AlpacaInteraction,
-        alpaca_dataset: list[AlpacaInteraction],
+        context: ChatMLInteraction,
+        chatml_dataset: list[ChatMLInteraction],
     ) -> None:
         if idx >= len(node_items):
             raise ValueError("Invalid index")
@@ -277,26 +257,23 @@ class Plugin:
                         f"but got {next_node.role} at index {next_index}"
                     )
                 new_context = context.model_copy(deep=True)
-                new_context.instruction = current_node.positive
-                new_context.input = ""
-                self.traverse_nodes(node_items, next_index, new_context, alpaca_dataset)
-        elif current_node.role == Role.ASSISTANT:
-            context.output = current_node.positive
-            alpaca_dataset.append(context)
-            new_context = context.model_copy(deep=True)
-            new_context.history.append(
-                AlpacaDialogueRound(
-                    human_instruction=context.instruction,
-                    assistant_response=current_node.positive,
+                new_context.conversation.append(
+                    ChatMLMessage(role=Role.USER.value, content=current_node.positive)
                 )
+                self.traverse_nodes(node_items, next_index, new_context, chatml_dataset)
+        elif current_node.role == Role.ASSISTANT:
+            context.conversation.append(
+                ChatMLMessage(role=Role.ASSISTANT.value, content=current_node.positive)
             )
+            chatml_dataset.append(context)
+            new_context = context.model_copy(deep=True)
             if current_node.to:
                 for next_index in current_node.to:
                     self.traverse_nodes(
-                        node_items, next_index, new_context, alpaca_dataset
+                        node_items, next_index, new_context, chatml_dataset
                     )
 
-    async def export_alpaca(
+    async def export_chatml(
         self, export_req: ExportReq = Body(..., description="The dataset to export")
     ) -> JSONResponse:
         dataset_name = export_req.dataset_name
@@ -304,7 +281,7 @@ class Plugin:
         if not dataset:
             return JSONResponse({"message": "Dataset not found"}, status_code=404)
 
-        alpaca_dataset = []
+        chatml_dataset = []
         for item in dataset.items:
             if not item.nodeItems:
                 return JSONResponse({"message": "Empty nodeItems"}, status_code=400)
@@ -318,35 +295,30 @@ class Plugin:
                 )
 
             system_positive = item.nodeItems[0].positive
-            context = AlpacaInteraction(
-                instruction="",
-                input=None,
-                output="",
-                system=system_positive,
-                history=[],
+            context = ChatMLInteraction(
+                conversation=[ChatMLMessage(role="system", content=system_positive)]
             )
             try:
                 for start_index in item.nodeItems[0].to:
                     self.traverse_nodes(
-                        item.nodeItems, start_index, context, alpaca_dataset
+                        item.nodeItems, start_index, context, chatml_dataset
                     )
             except ValueError as e:
-                return JSONResponse(content={"message": str(e)}, status_code=400)
+                return JSONResponse(
+                    {"message": "Invalid dataset item", "detail": str(e)},
+                    status_code=400,
+                )
 
         dumped_data = []
-        for interaction in alpaca_dataset:
+        for interaction in chatml_dataset:
             try:
                 dumped = interaction.model_dump(exclude_none=True)
-                dumped["history"] = [
-                    [item["human_instruction"], item["assistant_response"]]
-                    for item in dumped["history"]
-                ]
                 dumped_data.append(dumped)
             except ValidationError as e:
                 return JSONResponse(
                     {
-                        "message": "Validation error",
-                        "errors": format_validation_error(e),
+                        "message": "Invalid dataset item",
+                        "detail": format_validation_error(e),
                     },
                     status_code=400,
                 )
@@ -356,18 +328,18 @@ class Plugin:
         content = json_content.encode("utf-8")
 
         download_id = str(uuid.uuid4())
-        filename = f"alpaca_export_{download_id}.json"
+        filename = f"chatml_export_{download_id}.json"
 
         self.export_cache[download_id] = ExportCacheItem(
             content=content,
-            filename=filename,
             expiration_time=time.time() + self.file_expiration_time,
+            filename=filename,
         )
 
         return JSONResponse(
             {
                 "message": "Dataset exported",
-                "url": f"/plugins/download_alpaca/{download_id}",
+                "url": f"/plugins/download_chatml/{download_id}",
                 "filename": filename,
             },
             status_code=200,

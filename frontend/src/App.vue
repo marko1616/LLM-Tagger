@@ -29,7 +29,6 @@ export default defineComponent({
       next()
     })
     window.addEventListener('beforeunload', function (event) {
-      console.log(editingState.saved)
       if(editingState.saved === false) {
         event.preventDefault()
       }

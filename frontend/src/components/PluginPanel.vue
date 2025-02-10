@@ -524,36 +524,10 @@ ul {
     cursor: pointer;
     user-select: none;
     border-radius: 0.25em;
-    transition: all 0.3s ease;
 
     &:hover,
     &.selected {
-      color: $content-color-dark;
       background: $list-level2-selected-color;
-    }
-
-    & button {
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 20em;
-      height: 100%;
-      color: $content-color-dark;
-      user-select: none;
-      background-color: $button-bg-color;
-      border: 0;
-      border-radius: 0.25em;
-      transition: all 0.3s ease;
-
-      &:hover {
-        background-color: $button-hover-bg-color;
-      }
-
-      &:active {
-        transform: scale(0.95);
-      }
     }
   }
 }

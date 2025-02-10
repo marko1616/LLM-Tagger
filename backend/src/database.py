@@ -11,6 +11,7 @@ engine = create_engine("sqlite:///volume/database.db")
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
+
 class ImageTable(Base):
     __tablename__ = "images"
 
@@ -20,7 +21,10 @@ class ImageTable(Base):
     data = Column(LargeBinary)
 
     def as_image(self) -> Image:
-        return Image(id=self.id, name=self.name, file_type=self.file_type, data=self.data)
+        return Image(
+            id=self.id, name=self.name, file_type=self.file_type, data=self.data
+        )
+
 
 class DatasetTable(Base):
     __tablename__ = "datasets"
@@ -32,6 +36,7 @@ class DatasetTable(Base):
 
     def as_dataset(self) -> Dataset:
         return Dataset(name=self.name, timestamp=self.timestamp, items=self.items)
+
 
 class Database:
     @contextmanager
@@ -55,6 +60,7 @@ class Database:
             session.add(image)
             session.flush()
             return image.id
+
     def get_image_by_id(self, id: int) -> Image:
         with self.get_session() as session:
             return session.query(ImageTable).filter_by(id=id).first().as_image()
@@ -63,7 +69,7 @@ class Database:
         with self.get_session() as session:
             image = session.query(ImageTable).filter_by(id=id).first()
             session.delete(image)
-    
+
     def list_datasets(self) -> list[str]:
         with self.get_session() as session:
             return [dataset.name for dataset in session.query(DatasetTable).all()]
@@ -82,7 +88,7 @@ class Database:
         with self.get_session() as session:
             dataset = session.query(DatasetTable).filter_by(name=name).first()
             return dataset.as_dataset() if dataset else None
-        
+
     def delete_dataset_by_id(self, id: int) -> None:
         with self.get_session() as session:
             dataset = session.query(DatasetTable).filter_by(id=id).first()
